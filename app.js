@@ -17,10 +17,6 @@ const PETS = {
   },
 };
 const DEFAULT_PET = "penguin";
-const PET_MODE_TO_FRAME_MODE = {
-  sleep: "sleepy",
-  poop: "dirty",
-};
 
 const defaultState = {
   phase: "egg",
@@ -31,14 +27,13 @@ const defaultState = {
   bored: 1,
   life: "alive",
   petMode: "idle",
+  happyTicksRemaining: 0,
   tickCounter: 0,
   lastTick: Date.now(),
   criticalTickStreak: 0,
 };
 
 const state = loadState();
-let happyTimeoutId = null;
-
 function clampStat(value) {
   return Math.max(0, Math.min(4, Number(value) || 0));
 }
@@ -58,9 +53,15 @@ function clampState(source = state) {
   source.tickCounter = Math.max(0, Number(source.tickCounter) || 0);
   source.lastTick = Number(source.lastTick) || Date.now();
   source.criticalTickStreak = Math.max(0, Number(source.criticalTickStreak) || 0);
+  source.happyTicksRemaining = Math.max(0, Number(source.happyTicksRemaining) || 0);
 
-  const validModes = new Set(["idle", "hungry", "sleep", "poop", "happy", "dead"]);
-  source.petMode = validModes.has(source.petMode) ? source.petMode : "idle";
+  const legacyModeMap = {
+    sleep: "sleepy",
+    poop: "dirty",
+  };
+  const normalizedMode = legacyModeMap[source.petMode] ?? source.petMode;
+  const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "dead"]);
+  source.petMode = validModes.has(normalizedMode) ? normalizedMode : "idle";
 
   return source;
 }
@@ -85,10 +86,10 @@ function saveState() {
 
 function derivePetMode(source) {
   if (source.life === "dead") return "dead";
-  if (source.sleep >= 3) return "sleep";
-  if (source.poop >= 3) return "poop";
+  if (source.poop >= 1) return "dirty";
+  if (source.sleep >= 3) return "sleepy";
   if (source.hunger >= 3) return "hungry";
-  if (source.bored >= 3) return "idle";
+  if (source.happyTicksRemaining > 0) return "happy";
   return "idle";
 }
 
@@ -136,8 +137,7 @@ function render() {
   const petElement = document.getElementById("pet");
   const eggElement = document.getElementById("egg");
   const petConfig = PETS[DEFAULT_PET];
-  const frameMode = PET_MODE_TO_FRAME_MODE[state.petMode] ?? state.petMode;
-  const frame = petConfig.map[frameMode] ?? petConfig.map.idle ?? { col: 0, row: 0 };
+  const frame = petConfig.map[state.petMode] ?? petConfig.map.idle ?? { col: 0, row: 0 };
 
   petElement.style.setProperty("--pet-col", frame.col);
   petElement.style.setProperty("--pet-row", frame.row);
@@ -180,6 +180,10 @@ function applyTick() {
     state.poop += 1;
   }
 
+  if (state.happyTicksRemaining > 0) {
+    state.happyTicksRemaining = Math.max(0, state.happyTicksRemaining - 1);
+  }
+
   clampState();
 
   const hasCriticalStat = [state.hunger, state.sleep, state.poop, state.bored].some((stat) => stat >= 4);
@@ -214,37 +218,28 @@ function checkTick() {
   render();
 }
 
-function withHappyBounce(mutator) {
+function applyAction(mutator, { happyTicks = 0 } = {}) {
   if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
   mutator();
+  state.happyTicksRemaining = happyTicks;
   clampState();
-  state.petMode = "happy";
+  state.petMode = derivePetMode(state);
   saveState();
   render();
-
-  if (happyTimeoutId) {
-    clearTimeout(happyTimeoutId);
-  }
-
-  happyTimeoutId = setTimeout(() => {
-    state.petMode = derivePetMode(state);
-    saveState();
-    render();
-  }, 800);
 }
 
 function init() {
   document.getElementById("feedBtn").addEventListener("click", () => {
-    withHappyBounce(() => {
+    applyAction(() => {
       state.hunger = Math.max(0, state.hunger - 1);
       state.bored = Math.min(4, state.bored + 0);
     });
   });
 
   document.getElementById("sleepBtn").addEventListener("click", () => {
-    withHappyBounce(() => {
+    applyAction(() => {
       state.sleep = state.sleep > 0 ? state.sleep - 1 : state.sleep + 1;
     });
   });
@@ -258,30 +253,24 @@ function init() {
     }
 
     clampState();
-    state.petMode = "happy";
+    state.happyTicksRemaining = 0;
+    state.petMode = derivePetMode(state);
     saveState();
     render();
-
-    if (happyTimeoutId) {
-      clearTimeout(happyTimeoutId);
-    }
-
-    happyTimeoutId = setTimeout(() => {
-      state.petMode = derivePetMode(state);
-      saveState();
-      render();
-    }, 800);
   });
 
   document.getElementById("playBtn").addEventListener("click", () => {
-    withHappyBounce(() => {
-      state.bored = Math.max(0, state.bored - 2);
-      state.hunger = Math.min(4, state.hunger + 1);
+    applyAction(
+      () => {
+        state.bored = Math.max(0, state.bored - 2);
+        state.hunger = Math.min(4, state.hunger + 1);
 
-      if (Math.random() < 0.5) {
-        state.sleep = Math.min(4, state.sleep + 1);
-      }
-    });
+        if (Math.random() < 0.5) {
+          state.sleep = Math.min(4, state.sleep + 1);
+        }
+      },
+      { happyTicks: 2 },
+    );
   });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
