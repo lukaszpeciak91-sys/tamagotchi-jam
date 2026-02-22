@@ -30,6 +30,8 @@ const defaultState = {
   life: "alive",
   petMode: "idle",
   happyTicksRemaining: 0,
+  poseOverride: null,
+  poseOverrideExpiresAt: 0,
   tickCounter: 0,
   lastTick: Date.now(),
   criticalTickStreak: 0,
@@ -56,13 +58,15 @@ function clampState(source = state) {
   source.lastTick = Number(source.lastTick) || Date.now();
   source.criticalTickStreak = Math.max(0, Number(source.criticalTickStreak) || 0);
   source.happyTicksRemaining = Math.max(0, Number(source.happyTicksRemaining) || 0);
+  const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "dead"]);
+  source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
+  source.poseOverrideExpiresAt = Math.max(0, Number(source.poseOverrideExpiresAt) || 0);
 
   const legacyModeMap = {
     sleep: "sleepy",
     poop: "dirty",
   };
   const normalizedMode = legacyModeMap[source.petMode] ?? source.petMode;
-  const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "dead"]);
   source.petMode = validModes.has(normalizedMode) ? normalizedMode : "idle";
 
   return source;
@@ -88,6 +92,7 @@ function saveState() {
 
 function derivePetMode(source) {
   if (source.life === "dead") return "dead";
+  if (source.poseOverride && source.poseOverrideExpiresAt > Date.now()) return source.poseOverride;
   if (source.poop >= 1) return "dirty";
   if (source.sleep >= 3) return "sleepy";
   if (source.hunger >= 3) return "hungry";
@@ -205,7 +210,16 @@ function checkTick() {
   if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
-  const elapsed = Date.now() - state.lastTick;
+  const now = Date.now();
+  if (state.poseOverride && state.poseOverrideExpiresAt <= now) {
+    state.poseOverride = null;
+    state.poseOverrideExpiresAt = 0;
+    state.petMode = derivePetMode(state);
+    saveState();
+    render();
+  }
+
+  const elapsed = now - state.lastTick;
   const ticksPassed = Math.floor(elapsed / TICK_MS);
 
   if (ticksPassed <= 0) return;
@@ -220,12 +234,14 @@ function checkTick() {
   render();
 }
 
-function applyAction(mutator, { happyTicks = 0 } = {}) {
+function applyAction(mutator, { happyTicks = 0, poseOverride = null, poseOverrideMs = 0 } = {}) {
   if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
   mutator();
   state.happyTicksRemaining = happyTicks;
+  state.poseOverride = poseOverride;
+  state.poseOverrideExpiresAt = poseOverride ? Date.now() + poseOverrideMs : 0;
   clampState();
   state.petMode = derivePetMode(state);
   saveState();
@@ -234,16 +250,22 @@ function applyAction(mutator, { happyTicks = 0 } = {}) {
 
 function init() {
   document.getElementById("feedBtn").addEventListener("click", () => {
-    applyAction(() => {
-      state.hunger = Math.max(0, state.hunger - 1);
-      state.bored = Math.min(4, state.bored + 0);
-    });
+    applyAction(
+      () => {
+        state.hunger = Math.max(0, state.hunger - 1);
+        state.bored = Math.min(4, state.bored + 0);
+      },
+      { poseOverride: "happy", poseOverrideMs: 5000 },
+    );
   });
 
   document.getElementById("sleepBtn").addEventListener("click", () => {
-    applyAction(() => {
-      state.sleep = state.sleep > 0 ? state.sleep - 1 : state.sleep + 1;
-    });
+    applyAction(
+      () => {
+        state.sleep = Math.max(0, state.sleep - 1);
+      },
+      { poseOverride: "sleepy", poseOverrideMs: 5000 },
+    );
   });
 
   document.getElementById("cleanBtn").addEventListener("click", () => {
@@ -271,7 +293,7 @@ function init() {
           state.sleep = Math.min(4, state.sleep + 1);
         }
       },
-      { happyTicks: 2 },
+      { happyTicks: 2, poseOverride: "happy", poseOverrideMs: 5000 },
     );
   });
 
