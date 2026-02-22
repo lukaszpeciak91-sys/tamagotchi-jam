@@ -67,7 +67,6 @@ function clampState(source = state) {
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
   source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % 5;
   source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
-  if (source.poseOverrideTicks === 0) {
   source.poseOverrideUntilMs = Math.max(0, Number(source.poseOverrideUntilMs) || 0);
   if (source.poseOverride && source.poseOverrideUntilMs === 0 && source.poseOverrideTicks === 0) {
     source.poseOverride = null;
