@@ -7,6 +7,7 @@
   --shadow: rgba(49, 38, 24, 0.22);
   --accent: #5f8f84;
   --dot-off: #c9b89f;
+  --poop-icon: none;
 }
 
 * {
@@ -133,26 +134,35 @@ body {
 
 .poop {
   position: absolute;
-  width: 22px;
-  height: 18px;
-  border-radius: 10px 10px 8px 8px;
-  background: #2a332a;
-  box-shadow:
-    4px -5px 0 0 #2a332a,
-    10px -3px 0 0 #2a332a,
-    7px -9px 0 0 #2a332a,
-    2px 2px 0 0 #1e261e,
-    12px 3px 0 0 #1e261e;
+}
+
+.poop--ui {
+  width: 48px;
+  height: 48px;
+  background-image: var(--poop-icon);
+  background-size: contain;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  position: absolute;
+  bottom: 6px;
+  left: 14px;
+}
+
+.poop--ui::before {
+  content: "💩";
+  font-size: 40px;
+  line-height: 1;
+  display: block;
 }
 
 .poop--1 {
-  left: 24px;
-  bottom: 26px;
+  left: 14px;
+  bottom: 6px;
 }
 
 .poop--2 {
-  right: 30px;
-  bottom: 32px;
+  right: 14px;
+  bottom: 6px;
 }
 
 .screen--dirty::before,
