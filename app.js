@@ -33,6 +33,7 @@ const defaultState = {
   happyTicksRemaining: 0,
   poseOverride: null,
   poseOverrideTicks: 0,
+  poseOverrideUntilMs: 0,
   tickCounter: 0,
   lastTick: Date.now(),
   criticalTickStreak: 0,
@@ -62,7 +63,8 @@ function clampState(source = state) {
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
-  if (source.poseOverrideTicks === 0) {
+  source.poseOverrideUntilMs = Math.max(0, Number(source.poseOverrideUntilMs) || 0);
+  if (source.poseOverride && source.poseOverrideUntilMs === 0 && source.poseOverrideTicks === 0) {
     source.poseOverride = null;
   }
 
@@ -173,8 +175,11 @@ function render() {
     document.getElementById(id).disabled = actionDisabled;
   });
 
+  const poseRemainingMs = state.poseOverrideUntilMs
+    ? Math.max(0, state.poseOverrideUntilMs - Date.now())
+    : 0;
   document.getElementById("debugLine").textContent =
-    `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter}`;
+    `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter}`;
 }
 
 function applyTick() {
@@ -198,10 +203,7 @@ function applyTick() {
   }
 
   if (state.poseOverrideTicks > 0) {
-    state.poseOverrideTicks = Math.max(0, state.poseOverrideTicks - 1);
-    if (state.poseOverrideTicks === 0) {
-      state.poseOverride = null;
-    }
+    state.poseOverrideTicks = 0;
   }
 
   clampState();
@@ -220,6 +222,13 @@ function applyTick() {
 }
 
 function checkTick() {
+  if (state.poseOverride && state.poseOverrideUntilMs && Date.now() >= state.poseOverrideUntilMs) {
+    state.poseOverride = null;
+    state.poseOverrideUntilMs = 0;
+    state.poseOverrideTicks = 0;
+    saveState();
+  }
+
   if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
@@ -239,7 +248,10 @@ function checkTick() {
   render();
 }
 
-function applyAction(mutator, { happyTicks = 0, poseOverride = null, poseOverrideTicks = 0 } = {}) {
+function applyAction(
+  mutator,
+  { happyTicks = 0, poseOverride = null, poseOverrideTicks = 0, poseOverrideDurationMs = 0 } = {},
+) {
   if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
@@ -247,6 +259,7 @@ function applyAction(mutator, { happyTicks = 0, poseOverride = null, poseOverrid
   state.happyTicksRemaining = happyTicks;
   state.poseOverride = poseOverride;
   state.poseOverrideTicks = poseOverride ? poseOverrideTicks : 0;
+  state.poseOverrideUntilMs = poseOverride ? Date.now() + poseOverrideDurationMs : 0;
   clampState();
   state.petMode = derivePetMode(state);
   saveState();
@@ -260,7 +273,7 @@ function init() {
         state.hunger = Math.max(0, state.hunger - 1);
         state.bored = Math.min(4, state.bored + 0);
       },
-      { poseOverride: "happy", poseOverrideTicks: 1 },
+      { poseOverride: "happy", poseOverrideTicks: 0, poseOverrideDurationMs: 900 },
     );
   });
 
@@ -269,7 +282,7 @@ function init() {
       () => {
         state.sleep = Math.max(0, state.sleep - 1);
       },
-      { poseOverride: "sleepy", poseOverrideTicks: 1 },
+      { poseOverride: "sleepy", poseOverrideTicks: 0, poseOverrideDurationMs: 1100 },
     );
   });
 
@@ -298,7 +311,7 @@ function init() {
           state.sleep = Math.min(4, state.sleep + 1);
         }
       },
-      { happyTicks: 2, poseOverride: "happy", poseOverrideTicks: 2 },
+      { happyTicks: 2, poseOverride: "happy", poseOverrideTicks: 0, poseOverrideDurationMs: 900 },
     );
   });
 
