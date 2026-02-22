@@ -3,7 +3,7 @@ const TICK_MS = 20000;
 const MAX_CATCHUP_TICKS = 8;
 const PETS = {
   penguin: {
-    sheet: "assets/pets/penguin/penguin_sheet.png",
+    sheet: "assets/pets/penguin/Penguin_sheet.png",
     cols: 3,
     rows: 2,
     map: {
