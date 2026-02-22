@@ -31,7 +31,7 @@ const defaultState = {
   petMode: "idle",
   happyTicksRemaining: 0,
   poseOverride: null,
-  poseOverrideExpiresAt: 0,
+  poseOverrideTicks: 0,
   tickCounter: 0,
   lastTick: Date.now(),
   criticalTickStreak: 0,
@@ -60,7 +60,10 @@ function clampState(source = state) {
   source.happyTicksRemaining = Math.max(0, Number(source.happyTicksRemaining) || 0);
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
-  source.poseOverrideExpiresAt = Math.max(0, Number(source.poseOverrideExpiresAt) || 0);
+  source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
+  if (source.poseOverrideTicks === 0) {
+    source.poseOverride = null;
+  }
 
   const legacyModeMap = {
     sleep: "sleepy",
@@ -92,7 +95,7 @@ function saveState() {
 
 function derivePetMode(source) {
   if (source.life === "dead") return "dead";
-  if (source.poseOverride && source.poseOverrideExpiresAt > Date.now()) return source.poseOverride;
+  if (source.poseOverride) return source.poseOverride;
   if (source.poop >= 1) return "dirty";
   if (source.sleep >= 3) return "sleepy";
   if (source.hunger >= 3) return "hungry";
@@ -168,7 +171,7 @@ function render() {
   });
 
   document.getElementById("debugLine").textContent =
-    `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} ticks:${state.tickCounter}`;
+    `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter}`;
 }
 
 function applyTick() {
@@ -191,6 +194,13 @@ function applyTick() {
     state.happyTicksRemaining = Math.max(0, state.happyTicksRemaining - 1);
   }
 
+  if (state.poseOverrideTicks > 0) {
+    state.poseOverrideTicks = Math.max(0, state.poseOverrideTicks - 1);
+    if (state.poseOverrideTicks === 0) {
+      state.poseOverride = null;
+    }
+  }
+
   clampState();
 
   const hasCriticalStat = [state.hunger, state.sleep, state.poop, state.bored].some((stat) => stat >= 4);
@@ -211,14 +221,6 @@ function checkTick() {
   if (state.life === "dead") return;
 
   const now = Date.now();
-  if (state.poseOverride && state.poseOverrideExpiresAt <= now) {
-    state.poseOverride = null;
-    state.poseOverrideExpiresAt = 0;
-    state.petMode = derivePetMode(state);
-    saveState();
-    render();
-  }
-
   const elapsed = now - state.lastTick;
   const ticksPassed = Math.floor(elapsed / TICK_MS);
 
@@ -234,14 +236,14 @@ function checkTick() {
   render();
 }
 
-function applyAction(mutator, { happyTicks = 0, poseOverride = null, poseOverrideMs = 0 } = {}) {
+function applyAction(mutator, { happyTicks = 0, poseOverride = null, poseOverrideTicks = 0 } = {}) {
   if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
   mutator();
   state.happyTicksRemaining = happyTicks;
   state.poseOverride = poseOverride;
-  state.poseOverrideExpiresAt = poseOverride ? Date.now() + poseOverrideMs : 0;
+  state.poseOverrideTicks = poseOverride ? poseOverrideTicks : 0;
   clampState();
   state.petMode = derivePetMode(state);
   saveState();
@@ -255,7 +257,7 @@ function init() {
         state.hunger = Math.max(0, state.hunger - 1);
         state.bored = Math.min(4, state.bored + 0);
       },
-      { poseOverride: "happy", poseOverrideMs: 5000 },
+      { poseOverride: "happy", poseOverrideTicks: 2 },
     );
   });
 
@@ -264,7 +266,7 @@ function init() {
       () => {
         state.sleep = Math.max(0, state.sleep - 1);
       },
-      { poseOverride: "sleepy", poseOverrideMs: 5000 },
+      { poseOverride: "sleepy", poseOverrideTicks: 2 },
     );
   });
 
@@ -293,7 +295,7 @@ function init() {
           state.sleep = Math.min(4, state.sleep + 1);
         }
       },
-      { happyTicks: 2, poseOverride: "happy", poseOverrideMs: 5000 },
+      { happyTicks: 2, poseOverride: "happy", poseOverrideTicks: 2 },
     );
   });
 
