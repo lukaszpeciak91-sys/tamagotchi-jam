@@ -260,7 +260,7 @@ function init() {
         state.hunger = Math.max(0, state.hunger - 1);
         state.bored = Math.min(4, state.bored + 0);
       },
-      { poseOverride: "happy", poseOverrideTicks: 2 },
+      { poseOverride: "happy", poseOverrideTicks: 1 },
     );
   });
 
@@ -269,7 +269,7 @@ function init() {
       () => {
         state.sleep = Math.max(0, state.sleep - 1);
       },
-      { poseOverride: "sleepy", poseOverrideTicks: 2 },
+      { poseOverride: "sleepy", poseOverrideTicks: 1 },
     );
   });
 
