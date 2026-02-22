@@ -3,6 +3,8 @@ const TICK_MS = 20000;
 const MAX_CATCHUP_TICKS = 8;
 
 const defaultState = {
+  phase: "egg",
+  eggTaps: 0,
   hunger: 1,
   sleep: 0,
   poop: 0,
@@ -22,11 +24,17 @@ function clampStat(value) {
 }
 
 function clampState(source = state) {
+  const validPhases = new Set(["egg", "pet", "dead"]);
+  source.phase = validPhases.has(source.phase) ? source.phase : "pet";
+  source.eggTaps = Math.max(0, Math.min(10, Number(source.eggTaps) || 0));
   source.hunger = clampStat(source.hunger);
   source.sleep = clampStat(source.sleep);
   source.poop = clampStat(source.poop);
   source.bored = clampStat(source.bored);
   source.life = source.life === "dead" ? "dead" : "alive";
+  if (source.life === "dead") {
+    source.phase = "dead";
+  }
   source.tickCounter = Math.max(0, Number(source.tickCounter) || 0);
   source.lastTick = Number(source.lastTick) || Date.now();
   source.criticalTickStreak = Math.max(0, Number(source.criticalTickStreak) || 0);
@@ -106,23 +114,29 @@ function render() {
   renderDots("boredDots", state.bored);
 
   const petElement = document.getElementById("pet");
+  const eggElement = document.getElementById("egg");
+
   petElement.className = `pet pet--${state.petMode}`;
+  petElement.hidden = state.phase !== "pet" && state.phase !== "dead";
+  eggElement.hidden = state.phase !== "egg";
+  eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
 
   const screenElement = document.getElementById("screen");
   screenElement.classList.toggle("screen--dirty", state.poop >= 2);
 
   renderPoop();
 
-  const actionDisabled = state.life === "dead";
+  const actionDisabled = state.life === "dead" || state.phase === "egg";
   ["feedBtn", "sleepBtn", "cleanBtn", "playBtn"].forEach((id) => {
     document.getElementById(id).disabled = actionDisabled;
   });
 
   document.getElementById("debugLine").textContent =
-    `hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} ticks:${state.tickCounter}`;
+    `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} ticks:${state.tickCounter}`;
 }
 
 function applyTick() {
+  if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
   state.tickCounter += 1;
@@ -153,6 +167,7 @@ function applyTick() {
 }
 
 function checkTick() {
+  if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
   const elapsed = Date.now() - state.lastTick;
@@ -171,6 +186,7 @@ function checkTick() {
 }
 
 function withHappyBounce(mutator) {
+  if (state.phase === "egg") return;
   if (state.life === "dead") return;
 
   mutator();
@@ -205,6 +221,7 @@ function init() {
   });
 
   document.getElementById("cleanBtn").addEventListener("click", () => {
+    if (state.phase === "egg") return;
     if (state.life === "dead") return;
 
     if (state.poop > 0) {
@@ -241,14 +258,43 @@ function init() {
   document.getElementById("resetBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
     Object.assign(state, { ...defaultState, lastTick: Date.now() });
-    state.petMode = derivePetMode(state);
+    state.phase = "egg";
+    state.eggTaps = 0;
+    state.petMode = "idle";
+    saveState();
+    render();
+  });
+
+  document.getElementById("screen").addEventListener("click", () => {
+    if (state.phase !== "egg") return;
+
+    state.eggTaps = Math.min(10, state.eggTaps + 1);
+
+    const eggElement = document.getElementById("egg");
+    eggElement.classList.remove("egg-shake");
+    // force reflow so class re-add replays animation
+    void eggElement.offsetWidth;
+    eggElement.classList.add("egg-shake");
+
+    if (state.eggTaps >= 10) {
+      state.phase = "pet";
+      state.petMode = derivePetMode(state);
+      state.lastTick = Date.now();
+      document.getElementById("screen").classList.add("screen--hatch");
+      setTimeout(() => {
+        document.getElementById("screen").classList.remove("screen--hatch");
+      }, 300);
+    }
+
     saveState();
     render();
   });
 
   setInterval(checkTick, 1000);
 
-  state.petMode = derivePetMode(state);
+  if (state.phase !== "egg") {
+    state.petMode = derivePetMode(state);
+  }
   saveState();
   render();
 }

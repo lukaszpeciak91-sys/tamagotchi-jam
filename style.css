@@ -207,6 +207,50 @@ body {
   animation: sprite-steps 0.65s steps(4) infinite, pet-idle 2.6s ease-in-out infinite;
 }
 
+.egg {
+  position: relative;
+  z-index: 2;
+  font-size: clamp(3rem, 9vw, 4.3rem);
+  line-height: 1;
+  user-select: none;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.egg::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  height: 40%;
+  border-top: 2px dashed rgba(54, 44, 32, 0.45);
+  transform: translate(-50%, -50%) scaleX(0);
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.egg.crack-1::after,
+.egg.crack-2::after,
+.egg.crack-3::after,
+.egg.crack-4::after,
+.egg.crack-5::after {
+  opacity: 1;
+}
+
+.egg.crack-1::after { transform: translate(-50%, -50%) scaleX(0.25); }
+.egg.crack-2::after { transform: translate(-50%, -50%) scaleX(0.45); }
+.egg.crack-3::after { transform: translate(-50%, -50%) scaleX(0.65); }
+.egg.crack-4::after { transform: translate(-50%, -50%) scaleX(0.85); }
+.egg.crack-5::after { transform: translate(-50%, -50%) scaleX(1); }
+
+.egg-shake {
+  animation: egg-shake 0.15s linear;
+}
+
+.screen--hatch {
+  animation: hatch-flash 0.3s ease;
+}
+
 .actions {
   flex: 0 0 auto;
   display: grid;
@@ -225,6 +269,11 @@ body {
   min-height: 44px;
   font-weight: 700;
   letter-spacing: 0.03em;
+}
+
+.actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 button:active {
@@ -335,6 +384,19 @@ button:active {
   100% { transform: rotate(0deg) scale(1); }
   25% { transform: rotate(-8deg) scale(1.05); }
   75% { transform: rotate(8deg) scale(1.05); }
+}
+
+@keyframes egg-shake {
+  0%,
+  100% { transform: translateX(0); }
+  25% { transform: translateX(-4px) rotate(-6deg); }
+  75% { transform: translateX(4px) rotate(6deg); }
+}
+
+@keyframes hatch-flash {
+  0% { box-shadow: inset 0 0 0 2px rgba(245, 231, 210, 0.45), inset 0 4px 10px rgba(90, 69, 45, 0.12); }
+  40% { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.8); }
+  100% { box-shadow: inset 0 0 0 2px rgba(245, 231, 210, 0.45), inset 0 4px 10px rgba(90, 69, 45, 0.12); }
 }
 
 @media (min-width: 640px) {
