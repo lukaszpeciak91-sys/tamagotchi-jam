@@ -64,6 +64,30 @@ function derivePetMode(source) {
   return "idle";
 }
 
+function renderPoop() {
+  const poopLayer = document.getElementById("poopLayer");
+  let blobsCount = 0;
+
+  if (state.poop >= 4) {
+    blobsCount = 2;
+  } else if (state.poop >= 2) {
+    blobsCount = 1;
+  }
+
+  if (blobsCount === 0) {
+    poopLayer.innerHTML = "";
+    return;
+  }
+
+  if (blobsCount === 1) {
+    poopLayer.innerHTML = '<div class="poop poop--1"></div>';
+    return;
+  }
+
+  poopLayer.innerHTML =
+    '<div class="poop poop--1"></div><div class="poop poop--2"></div>';
+}
+
 function renderDots(targetId, value) {
   const dots = Array.from({ length: 4 }, (_, index) => {
     const onClass = index < value ? "dot on" : "dot";
@@ -83,6 +107,11 @@ function render() {
 
   const petElement = document.getElementById("pet");
   petElement.className = `pet pet--${state.petMode}`;
+
+  const screenElement = document.getElementById("screen");
+  screenElement.classList.toggle("screen--dirty", state.poop >= 2);
+
+  renderPoop();
 
   const actionDisabled = state.life === "dead";
   ["feedBtn", "sleepBtn", "cleanBtn", "playBtn"].forEach((id) => {
@@ -176,9 +205,26 @@ function init() {
   });
 
   document.getElementById("cleanBtn").addEventListener("click", () => {
-    withHappyBounce(() => {
+    if (state.life === "dead") return;
+
+    if (state.poop > 0) {
       state.poop = Math.max(0, state.poop - 1);
-    });
+    }
+
+    clampState();
+    state.petMode = "happy";
+    saveState();
+    render();
+
+    if (happyTimeoutId) {
+      clearTimeout(happyTimeoutId);
+    }
+
+    happyTimeoutId = setTimeout(() => {
+      state.petMode = derivePetMode(state);
+      saveState();
+      render();
+    }, 800);
   });
 
   document.getElementById("playBtn").addEventListener("click", () => {
