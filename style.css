@@ -1,0 +1,232 @@
+:root {
+  --bg: #d8dfcf;
+  --panel: #9cac90;
+  --ink: #273127;
+  --ink-soft: #4f5f4f;
+  --dot-off: #b8c3b0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+  background: radial-gradient(circle at top, #ecf1e5, #c4ceb9);
+  color: var(--ink);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.gameboy {
+  width: min(100%, 430px);
+  background: linear-gradient(180deg, #c4ceb9 0%, #aab79f 100%);
+  border: 4px solid #596553;
+  border-radius: 24px;
+  box-shadow: 0 12px 20px rgba(10, 15, 10, 0.22);
+  padding: 1rem;
+}
+
+.status-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.status-item {
+  background: var(--bg);
+  border: 2px solid #556352;
+  border-radius: 8px;
+  padding: 0.35rem 0.4rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #51614f;
+  background: var(--dot-off);
+}
+
+.dot.on {
+  background: var(--ink);
+}
+
+.pet-area {
+  margin-top: 0.9rem;
+  background: var(--panel);
+  border: 4px solid #566651;
+  border-radius: 14px;
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.pet {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+  filter: contrast(1.05);
+  transform-origin: center;
+  background-image: linear-gradient(to right,
+    transparent 0 6.25%,
+    #273127 6.25% 12.5%,
+    #9cac90 12.5% 18.75%,
+    #273127 18.75% 25%,
+    transparent 25% 31.25%,
+    #273127 31.25% 37.5%,
+    #9cac90 37.5% 43.75%,
+    #273127 43.75% 50%,
+    transparent 50% 56.25%,
+    #273127 56.25% 62.5%,
+    #9cac90 62.5% 68.75%,
+    #273127 68.75% 75%,
+    transparent 75% 81.25%,
+    #273127 81.25% 87.5%,
+    #9cac90 87.5% 93.75%,
+    #273127 93.75% 100%
+  );
+  background-size: 400% 100%;
+  animation: sprite-steps 0.65s steps(4) infinite, pet-idle 2.6s ease-in-out infinite;
+}
+
+.actions {
+  margin-top: 0.95rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.actions button {
+  border: 2px solid #4f5f4b;
+  border-radius: 999px;
+  background: #d7dfd1;
+  color: var(--ink);
+  min-height: 48px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+.utility-row {
+  margin-top: 0.4rem;
+  text-align: right;
+}
+
+.reset-link {
+  border: none;
+  background: transparent;
+  color: #314031;
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
+
+.debug {
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+}
+
+.pet--idle {
+  animation: sprite-steps 0.7s steps(4) infinite, pet-idle 2.4s ease-in-out infinite;
+}
+
+.pet--hungry {
+  animation: sprite-steps 0.45s steps(4) infinite, pet-shake 0.35s linear infinite;
+}
+
+.pet--sleep {
+  animation: sprite-steps 1.4s steps(4) infinite, pet-sleep 3s ease-in-out infinite;
+  opacity: 0.88;
+}
+
+.pet--poop {
+  animation: sprite-steps 0.25s steps(4) infinite, pet-jitter 0.2s linear infinite;
+}
+
+.pet--happy {
+  animation: sprite-steps 0.35s steps(4) infinite, pet-happy 0.6s ease-in-out infinite;
+}
+
+.pet--dead {
+  animation: none;
+  filter: grayscale(1) contrast(0.9);
+  opacity: 0.55;
+  transform: translateY(10px) rotate(90deg);
+}
+
+@keyframes sprite-steps {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes pet-idle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pet-shake {
+  0%,
+  100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes pet-sleep {
+  0%,
+  100% { transform: scale(1); }
+  50% { transform: scale(0.92); }
+}
+
+@keyframes pet-jitter {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(3px, -2px); }
+  66% { transform: translate(-2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes pet-happy {
+  0%,
+  100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-8deg) scale(1.05); }
+  75% { transform: rotate(8deg) scale(1.05); }
+}
+
+@media (min-width: 640px) {
+  .gameboy {
+    padding: 1.1rem 1.2rem;
+  }
+}
