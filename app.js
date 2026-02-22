@@ -108,12 +108,12 @@ function renderPoop() {
   }
 
   if (blobsCount === 1) {
-    poopLayer.innerHTML = '<div class="poop poop--1"></div>';
+    poopLayer.innerHTML = '<div class="poop poop--ui poop--1"></div>';
     return;
   }
 
   poopLayer.innerHTML =
-    '<div class="poop poop--1"></div><div class="poop poop--2"></div>';
+    '<div class="poop poop--ui poop--1"></div><div class="poop poop--ui poop--2"></div>';
 }
 
 function renderDots(targetId, value) {
