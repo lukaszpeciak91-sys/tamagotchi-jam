@@ -197,15 +197,14 @@ body {
   aspect-ratio: 1 / 1;
   image-rendering: pixelated;
   background-color: transparent;
-  filter: contrast(1.05);
   transform-origin: center;
   transform: translateY(0);
   overflow: hidden;
   background-repeat: no-repeat;
   background-size: calc(var(--pet-cols) * 100%) calc(var(--pet-rows) * 100%);
   background-position:
-    calc((var(--pet-col, 0) / max(calc(var(--pet-cols, 1) - 1), 1)) * 100%)
-    calc((var(--pet-row, 0) / max(calc(var(--pet-rows, 1) - 1), 1)) * 100%);
+    calc(var(--pet-col) * 100% / (var(--pet-cols) - 1))
+    calc(var(--pet-row) * 100% / (var(--pet-rows) - 1));
   animation: pet-idle 2.6s ease-in-out infinite;
 }
 
@@ -322,12 +321,12 @@ button:active {
   animation: pet-shake 0.35s linear infinite;
 }
 
-.pet--sleep {
+.pet--sleepy {
   animation: pet-sleep 3s ease-in-out infinite;
   opacity: 0.88;
 }
 
-.pet--poop {
+.pet--dirty {
   animation: pet-jitter 0.2s linear infinite;
 }
 
@@ -337,9 +336,9 @@ button:active {
 
 .pet--dead {
   animation: none;
-  filter: grayscale(1) contrast(0.9);
-  opacity: 0.55;
-  transform: translateY(10px) rotate(90deg);
+  filter: none;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @keyframes pet-idle {
