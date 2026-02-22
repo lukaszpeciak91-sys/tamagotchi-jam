@@ -115,6 +115,36 @@ body {
     inset 0 4px 10px rgba(90, 69, 45, 0.12);
 }
 
+.bg-0 {
+  background:
+    repeating-linear-gradient(90deg, #ffd6e7 0 8px, #ffc1dc 8px 16px),
+    linear-gradient(#ffd6e7 70%, #c48a5a 70%);
+}
+
+.bg-1 {
+  background:
+    radial-gradient(circle at 80% 20%, #fff59d 20px, transparent 21px),
+    linear-gradient(#87ceeb 50%, #00bcd4 50% 70%, #f4d03f 70%);
+}
+
+.bg-2 {
+  background:
+    radial-gradient(#ffffff 2px, transparent 3px) 0 0/24px 24px,
+    linear-gradient(#b3e5fc 60%, #ffffff 60%);
+}
+
+.bg-3 {
+  background:
+    radial-gradient(#fff 1px, transparent 2px) 0 0/20px 20px,
+    linear-gradient(#1a0033, #000);
+}
+
+.bg-4 {
+  background:
+    repeating-linear-gradient(0deg, #e0e0e0 0 2px, #f5f5f5 2px 24px),
+    linear-gradient(#fafafa, #e0e0e0);
+}
+
 .pet-floor {
   position: absolute;
   left: 12%;

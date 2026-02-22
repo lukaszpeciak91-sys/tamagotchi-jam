@@ -33,6 +33,8 @@ const defaultState = {
   happyTicksRemaining: 0,
   poseOverride: null,
   poseOverrideTicks: 0,
+  bgIndex: 0,
+  bgTickCounter: 0,
   tickCounter: 0,
   lastTick: Date.now(),
   criticalTickStreak: 0,
@@ -62,6 +64,8 @@ function clampState(source = state) {
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
+  source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % 5;
+  source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
   if (source.poseOverrideTicks === 0) {
     source.poseOverride = null;
   }
@@ -164,6 +168,13 @@ function render() {
   eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
 
   const screenElement = document.getElementById("screen");
+  const bgClassPrefix = "bg-";
+  Array.from(screenElement.classList)
+    .filter((className) => className.startsWith(bgClassPrefix))
+    .forEach((className) => {
+      screenElement.classList.remove(className);
+    });
+  screenElement.classList.add(`${bgClassPrefix}${state.bgIndex}`);
   screenElement.classList.toggle("screen--dirty", state.poop >= 2);
 
   renderPoop();
@@ -191,6 +202,14 @@ function applyTick() {
 
   if (state.tickCounter % 3 === 0) {
     state.poop += 1;
+  }
+
+  if (!state.bgTickCounter) state.bgTickCounter = 0;
+  state.bgTickCounter += 1;
+
+  if (state.bgTickCounter >= 3) {
+    state.bgTickCounter = 0;
+    state.bgIndex = (state.bgIndex + 1) % 5;
   }
 
   if (state.happyTicksRemaining > 0) {
