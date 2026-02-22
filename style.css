@@ -74,6 +74,7 @@ body {
 
 .pet-area {
   margin-top: 0.9rem;
+  position: relative;
   background: var(--panel);
   border: 4px solid #566651;
   border-radius: 14px;
@@ -81,6 +82,59 @@ body {
   display: grid;
   place-items: center;
   overflow: hidden;
+}
+
+.poop-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.poop {
+  position: absolute;
+  width: 22px;
+  height: 18px;
+  border-radius: 10px 10px 8px 8px;
+  background: #2a332a;
+  box-shadow:
+    4px -5px 0 0 #2a332a,
+    10px -3px 0 0 #2a332a,
+    7px -9px 0 0 #2a332a,
+    2px 2px 0 0 #1e261e,
+    12px 3px 0 0 #1e261e;
+}
+
+.poop--1 {
+  left: 24px;
+  bottom: 26px;
+}
+
+.poop--2 {
+  right: 30px;
+  bottom: 32px;
+}
+
+.screen--dirty::before,
+.screen--dirty::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 22px;
+  border-left: 2px dotted rgba(39, 49, 39, 0.5);
+  border-radius: 999px;
+  top: 20px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.screen--dirty::before {
+  left: 20px;
+}
+
+.screen--dirty::after {
+  right: 26px;
+  transform: scaleX(-1);
 }
 
 .pet {
