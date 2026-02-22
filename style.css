@@ -1,9 +1,12 @@
 :root {
-  --bg: #d8dfcf;
-  --panel: #9cac90;
-  --ink: #273127;
-  --ink-soft: #4f5f4f;
-  --dot-off: #b8c3b0;
+  --bg: #e9dfcd;
+  --panel: #d7c6aa;
+  --panel-2: #f3e7d4;
+  --ink: #332b22;
+  --ink-soft: #675a4d;
+  --shadow: rgba(49, 38, 24, 0.22);
+  --accent: #5f8f84;
+  --dot-off: #c9b89f;
 }
 
 * {
@@ -14,7 +17,7 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: "Trebuchet MS", "Verdana", sans-serif;
-  background: radial-gradient(circle at top, #ecf1e5, #c4ceb9);
+  background: radial-gradient(circle at top, #f5eddc, var(--bg));
   color: var(--ink);
   overflow: hidden;
 }
@@ -31,12 +34,14 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #c4ceb9 0%, #aab79f 100%);
-  border: 4px solid #596553;
-  border-radius: 24px;
-  box-shadow: 0 12px 20px rgba(10, 15, 10, 0.22);
+  background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
+  border: 3px solid #8b775e;
+  border-radius: 20px;
+  box-shadow:
+    0 10px 20px var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
   padding: 10px;
-  gap: 10px;
+  gap: 8px;
 }
 
 .status-bar {
@@ -54,10 +59,11 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: var(--bg);
-  border: 2px solid #556352;
+  background: var(--panel-2);
+  border: 2px solid #7c684f;
   border-radius: 10px;
   padding: 6px 4px;
+  box-shadow: inset 0 -2px 0 rgba(83, 63, 41, 0.16);
 }
 
 .status-icon {
@@ -74,7 +80,7 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid #51614f;
+  border: 1px solid #7a654d;
   background: var(--dot-off);
 }
 
@@ -84,14 +90,21 @@ body {
 
 .pet-screen {
   position: relative;
-  flex: 1 1 60%;
+  flex: 1 1 66%;
   min-height: 0;
-  background: linear-gradient(180deg, #9fac93 0%, #95a68b 100%);
-  border: 4px solid #566651;
-  border-radius: 14px;
+  background:
+    radial-gradient(circle at 10px 10px, rgba(255, 255, 255, 0.2) 2px, transparent 2px),
+    linear-gradient(180deg, #d9ccb5 0%, #cebea4 100%);
+  background-size: 20px 20px, 100% 100%;
+  border: 3px solid #7f6a52;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   overflow: hidden;
+  padding-top: 2px;
+  box-shadow:
+    inset 0 0 0 2px rgba(245, 231, 210, 0.45),
+    inset 0 4px 10px rgba(90, 69, 45, 0.12);
 }
 
 .pet-floor {
@@ -100,7 +113,7 @@ body {
   right: 12%;
   bottom: 20%;
   height: 2px;
-  background: rgba(39, 49, 39, 0.35);
+  background: rgba(109, 80, 51, 0.35);
   z-index: 1;
 }
 
@@ -141,7 +154,7 @@ body {
   position: absolute;
   width: 10px;
   height: 22px;
-  border-left: 2px dotted rgba(39, 49, 39, 0.5);
+  border-left: 2px dotted rgba(86, 66, 44, 0.45);
   border-radius: 999px;
   top: 20px;
   z-index: 3;
@@ -188,21 +201,23 @@ body {
 }
 
 .actions {
-  flex: 0 0 25%;
+  flex: 0 0 22%;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 10px;
 }
 
 .actions button {
-  border: 2px solid #4f5f4b;
-  border-radius: 12px;
-  background: #d7dfd1;
-  box-shadow: inset 0 -3px 0 rgba(67, 85, 66, 0.3);
+  border: 2px solid #7b654c;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--panel-2), #e4d5be);
+  box-shadow:
+    0 2px 0 rgba(99, 76, 51, 0.35),
+    inset 0 -2px 0 rgba(121, 95, 65, 0.2);
   color: var(--ink);
-  min-height: 52px;
+  min-height: 50px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 button:active {
@@ -210,21 +225,34 @@ button:active {
 }
 
 .utility-row {
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: -2px;
 }
 
 .reset-link {
-  border: none;
-  background: transparent;
-  color: #314031;
-  font-size: 0.8rem;
-  text-decoration: underline;
+  border: 1px solid #7a664f;
+  border-radius: 8px;
+  background: var(--panel-2);
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  padding: 5px 8px;
 }
 
 .debug {
-  margin-top: 0.35rem;
-  font-size: 0.68rem;
+  margin: 0;
+  font-size: 0.72rem;
   color: var(--ink-soft);
+}
+
+.debug summary {
+  cursor: pointer;
+}
+
+.debug p {
+  margin: 0.25rem 0 0;
 }
 
 .pet--idle {
