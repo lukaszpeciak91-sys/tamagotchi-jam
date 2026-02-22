@@ -196,10 +196,13 @@ body {
   width: min(55vw, 220px);
   aspect-ratio: 1 / 1;
   image-rendering: pixelated;
+  background-color: transparent;
   filter: contrast(1.05);
   transform-origin: center;
+  transform: translateY(0);
+  overflow: hidden;
   background-repeat: no-repeat;
-  background-size: calc(var(--pet-cols, 1) * 100%) calc(var(--pet-rows, 1) * 100%);
+  background-size: calc(var(--pet-cols) * 100%) calc(var(--pet-rows) * 100%);
   background-position:
     calc((var(--pet-col, 0) / max(calc(var(--pet-cols, 1) - 1), 1)) * 100%)
     calc((var(--pet-row, 0) / max(calc(var(--pet-rows, 1) - 1), 1)) * 100%);
@@ -351,29 +354,28 @@ button:active {
 
 @keyframes pet-shake {
   0%,
-  100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+  100% { transform: translateY(0); }
+  25% { transform: translateY(-4px); }
+  75% { transform: translateY(2px); }
 }
 
 @keyframes pet-sleep {
   0%,
-  100% { transform: scale(1); }
-  50% { transform: scale(0.92); }
+  100% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
 }
 
 @keyframes pet-jitter {
-  0% { transform: translate(0, 0); }
-  33% { transform: translate(3px, -2px); }
-  66% { transform: translate(-2px, 2px); }
-  100% { transform: translate(0, 0); }
+  0% { transform: translateY(0); }
+  33% { transform: translateY(-3px); }
+  66% { transform: translateY(1px); }
+  100% { transform: translateY(0); }
 }
 
 @keyframes pet-happy {
   0%,
-  100% { transform: rotate(0deg) scale(1); }
-  25% { transform: rotate(-8deg) scale(1.05); }
-  75% { transform: rotate(8deg) scale(1.05); }
+  100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 @keyframes egg-shake {
