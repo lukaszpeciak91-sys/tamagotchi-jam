@@ -8,27 +8,28 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="gameboy" aria-label="Tamagotchi panel">
-        <header class="status-row" aria-label="Pet status">
-          <div class="status-item" data-stat="hunger">
-            <span class="label">HUNGER</span>
-            <span class="dots" id="hungerDots" aria-live="polite"></span>
+      <section class="app" aria-label="Tamagotchi panel">
+        <header class="status-bar" aria-label="Pet status">
+          <div class="status" data-stat="hunger">
+            <span class="status-icon" aria-hidden="true">🍗</span>
+            <div class="dots" id="hungerDots" aria-live="polite"></div>
           </div>
-          <div class="status-item" data-stat="sleep">
-            <span class="label">SLEEP</span>
-            <span class="dots" id="sleepDots" aria-live="polite"></span>
+          <div class="status" data-stat="sleep">
+            <span class="status-icon" aria-hidden="true">💤</span>
+            <div class="dots" id="sleepDots" aria-live="polite"></div>
           </div>
-          <div class="status-item" data-stat="poop">
-            <span class="label">POOP</span>
-            <span class="dots" id="poopDots" aria-live="polite"></span>
+          <div class="status" data-stat="poop">
+            <span class="status-icon" aria-hidden="true">💩</span>
+            <div class="dots" id="poopDots" aria-live="polite"></div>
           </div>
-          <div class="status-item" data-stat="bored">
-            <span class="label">BORED</span>
-            <span class="dots" id="boredDots" aria-live="polite"></span>
+          <div class="status" data-stat="bored">
+            <span class="status-icon" aria-hidden="true">🎾</span>
+            <div class="dots" id="boredDots" aria-live="polite"></div>
           </div>
         </header>
 
-        <section id="screen" class="pet-area" aria-label="Pet area">
+        <section id="screen" class="pet-screen" aria-label="Pet area">
+          <div class="pet-floor" aria-hidden="true"></div>
           <div id="pet" class="pet pet--idle" role="img" aria-label="Virtual pet"></div>
           <div id="poopLayer" class="poop-layer" aria-hidden="true"></div>
         </section>

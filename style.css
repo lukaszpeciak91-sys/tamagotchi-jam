@@ -16,53 +16,63 @@ body {
   font-family: "Trebuchet MS", "Verdana", sans-serif;
   background: radial-gradient(circle at top, #ecf1e5, #c4ceb9);
   color: var(--ink);
+  overflow: hidden;
 }
 
 .app-shell {
   min-height: 100vh;
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding: 0;
 }
 
-.gameboy {
-  width: min(100%, 430px);
+.app {
+  width: min(100%, 420px);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(180deg, #c4ceb9 0%, #aab79f 100%);
   border: 4px solid #596553;
   border-radius: 24px;
   box-shadow: 0 12px 20px rgba(10, 15, 10, 0.22);
-  padding: 1rem;
+  padding: 10px;
+  gap: 10px;
 }
 
-.status-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+.status-bar {
+  min-height: 15%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
-.status-item {
+.status {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   background: var(--bg);
   border: 2px solid #556352;
-  border-radius: 8px;
-  padding: 0.35rem 0.4rem;
+  border-radius: 10px;
+  padding: 6px 4px;
 }
 
-.label {
-  display: block;
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-  margin-bottom: 0.2rem;
+.status-icon {
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 .dots {
   display: inline-flex;
-  gap: 0.2rem;
+  gap: 0.15rem;
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   border: 1px solid #51614f;
   background: var(--dot-off);
@@ -72,16 +82,26 @@ body {
   background: var(--ink);
 }
 
-.pet-area {
-  margin-top: 0.9rem;
+.pet-screen {
   position: relative;
-  background: var(--panel);
+  flex: 1 1 60%;
+  min-height: 0;
+  background: linear-gradient(180deg, #9fac93 0%, #95a68b 100%);
   border: 4px solid #566651;
   border-radius: 14px;
-  min-height: 180px;
   display: grid;
   place-items: center;
   overflow: hidden;
+}
+
+.pet-floor {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 20%;
+  height: 2px;
+  background: rgba(39, 49, 39, 0.35);
+  z-index: 1;
 }
 
 .poop-layer {
@@ -138,6 +158,8 @@ body {
 }
 
 .pet {
+  position: relative;
+  z-index: 2;
   width: 96px;
   height: 96px;
   image-rendering: pixelated;
@@ -166,18 +188,19 @@ body {
 }
 
 .actions {
-  margin-top: 0.95rem;
+  flex: 0 0 25%;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .actions button {
   border: 2px solid #4f5f4b;
-  border-radius: 999px;
+  border-radius: 12px;
   background: #d7dfd1;
+  box-shadow: inset 0 -3px 0 rgba(67, 85, 66, 0.3);
   color: var(--ink);
-  min-height: 48px;
+  min-height: 52px;
   font-weight: 700;
   letter-spacing: 0.05em;
 }
@@ -187,7 +210,6 @@ button:active {
 }
 
 .utility-row {
-  margin-top: 0.4rem;
   text-align: right;
 }
 
@@ -280,7 +302,11 @@ button:active {
 }
 
 @media (min-width: 640px) {
-  .gameboy {
-    padding: 1.1rem 1.2rem;
+  .app-shell {
+    padding: 1rem;
+  }
+
+  .app {
+    height: calc(100vh - 2rem);
   }
 }
