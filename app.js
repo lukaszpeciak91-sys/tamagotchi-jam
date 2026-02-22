@@ -1,4 +1,6 @@
 const STORAGE_KEY = "tamagotchi-jam-state-v1";
+const TICK_MS = 20000;
+const MAX_CATCHUP_TICKS = 8;
 
 const defaultState = {
   hunger: 1,
@@ -7,7 +9,9 @@ const defaultState = {
   bored: 1,
   life: "alive",
   petMode: "idle",
-  lastSeen: Date.now(),
+  tickCounter: 0,
+  lastTick: Date.now(),
+  criticalTickStreak: 0,
 };
 
 const state = loadState();
@@ -23,10 +27,12 @@ function clampState(source = state) {
   source.poop = clampStat(source.poop);
   source.bored = clampStat(source.bored);
   source.life = source.life === "dead" ? "dead" : "alive";
+  source.tickCounter = Math.max(0, Number(source.tickCounter) || 0);
+  source.lastTick = Number(source.lastTick) || Date.now();
+  source.criticalTickStreak = Math.max(0, Number(source.criticalTickStreak) || 0);
 
   const validModes = new Set(["idle", "hungry", "sleep", "poop", "happy", "dead"]);
   source.petMode = validModes.has(source.petMode) ? source.petMode : "idle";
-  source.lastSeen = Number(source.lastSeen) || Date.now();
 
   return source;
 }
@@ -46,7 +52,6 @@ function loadState() {
 }
 
 function saveState() {
-  state.lastSeen = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
@@ -79,8 +84,61 @@ function render() {
   const petElement = document.getElementById("pet");
   petElement.className = `pet pet--${state.petMode}`;
 
+  const actionDisabled = state.life === "dead";
+  ["feedBtn", "sleepBtn", "cleanBtn", "playBtn"].forEach((id) => {
+    document.getElementById(id).disabled = actionDisabled;
+  });
+
   document.getElementById("debugLine").textContent =
-    `hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode}`;
+    `hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} ticks:${state.tickCounter}`;
+}
+
+function applyTick() {
+  if (state.life === "dead") return;
+
+  state.tickCounter += 1;
+  state.hunger += 1;
+  state.bored += 1;
+
+  if (state.tickCounter % 2 === 0) {
+    state.sleep += 1;
+  }
+
+  if (state.tickCounter % 3 === 0) {
+    state.poop += 1;
+  }
+
+  clampState();
+
+  const hasCriticalStat = [state.hunger, state.sleep, state.poop, state.bored].some((stat) => stat >= 4);
+  state.criticalTickStreak = hasCriticalStat ? state.criticalTickStreak + 1 : 0;
+
+  if (state.criticalTickStreak >= 2) {
+    state.life = "dead";
+    state.petMode = "dead";
+  } else {
+    state.petMode = derivePetMode(state);
+  }
+
+  saveState();
+}
+
+function checkTick() {
+  if (state.life === "dead") return;
+
+  const elapsed = Date.now() - state.lastTick;
+  const ticksPassed = Math.floor(elapsed / TICK_MS);
+
+  if (ticksPassed <= 0) return;
+
+  const ticksToApply = Math.min(ticksPassed, MAX_CATCHUP_TICKS);
+  for (let tickIndex = 0; tickIndex < ticksToApply; tickIndex += 1) {
+    applyTick();
+  }
+
+  state.lastTick += ticksToApply * TICK_MS;
+  saveState();
+  render();
 }
 
 function withHappyBounce(mutator) {
@@ -123,13 +181,26 @@ function init() {
     });
   });
 
+  document.getElementById("playBtn").addEventListener("click", () => {
+    withHappyBounce(() => {
+      state.bored = Math.max(0, state.bored - 2);
+      state.hunger = Math.min(4, state.hunger + 1);
+
+      if (Math.random() < 0.5) {
+        state.sleep = Math.min(4, state.sleep + 1);
+      }
+    });
+  });
+
   document.getElementById("resetBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    Object.assign(state, { ...defaultState, lastSeen: Date.now() });
+    Object.assign(state, { ...defaultState, lastTick: Date.now() });
     state.petMode = derivePetMode(state);
     saveState();
     render();
   });
+
+  setInterval(checkTick, 1000);
 
   state.petMode = derivePetMode(state);
   saveState();
