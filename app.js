@@ -1,6 +1,26 @@
 const STORAGE_KEY = "tamagotchi-jam-state-v1";
 const TICK_MS = 20000;
 const MAX_CATCHUP_TICKS = 8;
+const PETS = {
+  penguin: {
+    sheet: "assets/pets/penguin/penguin_sheet.png",
+    cols: 3,
+    rows: 2,
+    map: {
+      idle: { col: 0, row: 0 },
+      happy: { col: 1, row: 0 },
+      hungry: { col: 2, row: 0 },
+      sleepy: { col: 0, row: 1 },
+      dirty: { col: 1, row: 1 },
+      dead: { col: 2, row: 1 },
+    },
+  },
+};
+const DEFAULT_PET = "penguin";
+const PET_MODE_TO_FRAME_MODE = {
+  sleep: "sleepy",
+  poop: "dirty",
+};
 
 const defaultState = {
   phase: "egg",
@@ -115,6 +135,15 @@ function render() {
 
   const petElement = document.getElementById("pet");
   const eggElement = document.getElementById("egg");
+  const petConfig = PETS[DEFAULT_PET];
+  const frameMode = PET_MODE_TO_FRAME_MODE[state.petMode] ?? state.petMode;
+  const frame = petConfig.map[frameMode] ?? petConfig.map.idle ?? { col: 0, row: 0 };
+
+  petElement.style.setProperty("--pet-col", frame.col);
+  petElement.style.setProperty("--pet-row", frame.row);
+  petElement.style.setProperty("--pet-cols", petConfig.cols);
+  petElement.style.setProperty("--pet-rows", petConfig.rows);
+  petElement.style.backgroundImage = `url("${petConfig.sheet}")`;
 
   petElement.className = `pet pet--${state.petMode}`;
   petElement.hidden = state.phase !== "pet" && state.phase !== "dead";
