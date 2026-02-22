@@ -10,6 +10,7 @@ const PETS = {
       idle: { col: 0, row: 0 },
       happy: { col: 1, row: 0 },
       hungry: { col: 2, row: 0 },
+      bored: { col: 0, row: 0 },
       sleep: { col: 0, row: 1 },
       sleepy: { col: 0, row: 1 },
       poop: { col: 1, row: 1 },
@@ -58,7 +59,7 @@ function clampState(source = state) {
   source.lastTick = Number(source.lastTick) || Date.now();
   source.criticalTickStreak = Math.max(0, Number(source.criticalTickStreak) || 0);
   source.happyTicksRemaining = Math.max(0, Number(source.happyTicksRemaining) || 0);
-  const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "dead"]);
+  const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
   if (source.poseOverrideTicks === 0) {
@@ -95,11 +96,10 @@ function saveState() {
 
 function derivePetMode(source) {
   if (source.life === "dead") return "dead";
-  if (source.poseOverride) return source.poseOverride;
   if (source.poop >= 1) return "dirty";
-  if (source.sleep >= 3) return "sleepy";
   if (source.hunger >= 3) return "hungry";
-  if (source.happyTicksRemaining > 0) return "happy";
+  if (source.sleep >= 3) return "sleepy";
+  if (source.bored >= 3) return "bored";
   return "idle";
 }
 
@@ -144,10 +144,13 @@ function render() {
   renderDots("poopDots", state.poop);
   renderDots("boredDots", state.bored);
 
+  state.petMode = derivePetMode(state);
+  const renderMode = state.poseOverride ?? state.petMode;
+
   const petElement = document.getElementById("pet");
   const eggElement = document.getElementById("egg");
   const petConfig = PETS[DEFAULT_PET];
-  const frame = petConfig.map[state.petMode] ?? petConfig.map.idle ?? { col: 0, row: 0 };
+  const frame = petConfig.map[renderMode] ?? petConfig.map.idle ?? { col: 0, row: 0 };
 
   petElement.style.setProperty("--pet-col", frame.col);
   petElement.style.setProperty("--pet-row", frame.row);
@@ -155,7 +158,7 @@ function render() {
   petElement.style.setProperty("--pet-rows", petConfig.rows);
   petElement.style.backgroundImage = `url("${petConfig.sheet}")`;
 
-  petElement.className = `pet pet--${state.petMode}`;
+  petElement.className = `pet pet--${renderMode}`;
   petElement.hidden = state.phase !== "pet" && state.phase !== "dead";
   eggElement.hidden = state.phase !== "egg";
   eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
