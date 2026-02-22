@@ -68,9 +68,9 @@ function renderPoop() {
   const poopLayer = document.getElementById("poopLayer");
   let blobsCount = 0;
 
-  if (state.poop >= 4) {
+  if (state.poop >= 3) {
     blobsCount = 2;
-  } else if (state.poop >= 2) {
+  } else if (state.poop >= 1) {
     blobsCount = 1;
   }
 
