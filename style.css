@@ -115,6 +115,103 @@ body {
     inset 0 4px 10px rgba(90, 69, 45, 0.12);
 }
 
+#screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: contain;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+#screen.bg-0::before {
+  opacity: 1;
+  background-image:
+    linear-gradient(180deg, transparent 0 64%, rgba(186, 131, 94, 0.18) 64% 100%),
+    radial-gradient(140% 26% at 50% 100%, rgba(173, 122, 84, 0.4) 0 62%, transparent 63%);
+}
+
+#screen.bg-1::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(140% 30% at 50% 74%, transparent 0 62%, rgba(131, 202, 214, 0.5) 63% 69%, transparent 70%),
+    radial-gradient(130% 40% at 50% 100%, rgba(243, 208, 144, 0.52) 0 62%, transparent 63%);
+}
+
+#screen.bg-2::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(130% 44% at 50% 100%, rgba(225, 242, 255, 0.86) 0 62%, transparent 63%),
+    radial-gradient(95% 34% at 24% 100%, rgba(208, 233, 248, 0.72) 0 54%, transparent 55%);
+}
+
+#screen.bg-3::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(120% 56% at 50% 112%, rgba(82, 106, 173, 0.7) 0 60%, transparent 61%),
+    radial-gradient(86% 26% at 52% 100%, rgba(111, 136, 208, 0.5) 0 54%, transparent 55%);
+}
+
+#screen.bg-4::before {
+  opacity: 1;
+  background-image:
+    linear-gradient(180deg, transparent 0 72%, rgba(139, 157, 183, 0.72) 72% 100%),
+    radial-gradient(74% 12% at 50% 72%, rgba(165, 182, 205, 0.6) 0 65%, transparent 66%);
+}
+
+#screen.bg-5::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(130% 34% at 50% 100%, transparent 0 60%, rgba(227, 245, 221, 0.85) 61% 64%, transparent 65%),
+    radial-gradient(120% 40% at 50% 112%, rgba(76, 166, 70, 0.35) 0 60%, transparent 61%);
+}
+
+#screen.bg-6::before {
+  opacity: 1;
+  background-image:
+    linear-gradient(90deg, transparent 0 18%, rgba(201, 221, 238, 0.55) 18% 21%, transparent 21% 49%, rgba(201, 221, 238, 0.55) 49% 52%, transparent 52% 79%, rgba(201, 221, 238, 0.55) 79% 82%, transparent 82% 100%),
+    linear-gradient(180deg, transparent 0 38%, rgba(201, 221, 238, 0.55) 38% 41%, transparent 41% 68%, rgba(201, 221, 238, 0.55) 68% 71%, transparent 71% 100%);
+}
+
+#screen.bg-7::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(36% 22% at 78% 68%, rgba(76, 124, 74, 0.65) 0 58%, transparent 59%),
+    radial-gradient(140% 42% at 50% 100%, rgba(91, 154, 84, 0.54) 0 60%, transparent 61%);
+}
+
+#screen.bg-8::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(16% 8% at 14% 90%, rgba(85, 112, 84, 0.64) 0 60%, transparent 61%),
+    radial-gradient(16% 8% at 30% 92%, rgba(85, 112, 84, 0.64) 0 60%, transparent 61%),
+    radial-gradient(16% 8% at 48% 91%, rgba(85, 112, 84, 0.64) 0 60%, transparent 61%),
+    radial-gradient(16% 8% at 66% 92%, rgba(85, 112, 84, 0.64) 0 60%, transparent 61%),
+    radial-gradient(16% 8% at 84% 90%, rgba(85, 112, 84, 0.64) 0 60%, transparent 61%),
+    radial-gradient(130% 38% at 50% 108%, rgba(58, 84, 61, 0.45) 0 60%, transparent 61%);
+}
+
+#screen.bg-9::before {
+  opacity: 1;
+  background-image:
+    linear-gradient(180deg, transparent 0 56%, rgba(76, 66, 121, 0.78) 56% 100%),
+    linear-gradient(180deg, transparent 0 44%, rgba(100, 86, 160, 0.56) 44% 100%),
+    linear-gradient(180deg, transparent 0 50%, rgba(132, 112, 205, 0.5) 50% 100%);
+  background-size: 100% 100%, 18% 100%, 14% 100%;
+  background-position: bottom center, 18% 100%, 76% 100%;
+}
+
+#screen.bg-10::before {
+  opacity: 1;
+  background-image:
+    radial-gradient(70% 22% at 50% 66%, rgba(109, 156, 95, 0.5) 0 60%, transparent 61%),
+    linear-gradient(180deg, transparent 0 68%, rgba(96, 128, 92, 0.62) 68% 100%);
+}
+
 .bg-0 {
   background:
     repeating-linear-gradient(90deg, #ffd6e7 0 8px, #ffc1dc 8px 16px),
@@ -215,7 +312,7 @@ body {
     linear-gradient(180deg, #2f355f 0%, #242a4c 50%, #20253f 65%, #4f3f57 100%);
 }
 
-.pet-screen.bg-8::before {
+#screen.bg-8::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -236,7 +333,7 @@ body {
     linear-gradient(180deg, #29154f 0%, #1b113e 56%, #130f30 100%);
 }
 
-.pet-screen.bg-9::before {
+#screen.bg-9::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -305,26 +402,15 @@ body {
   display: block;
 }
 
-.screen--dirty::before,
-.screen--dirty::after {
+.screen--dirty .poop-layer::after {
   content: "";
   position: absolute;
-  width: 10px;
-  height: 22px;
-  border-left: 2px dotted rgba(86, 66, 44, 0.45);
-  border-radius: 999px;
-  top: 20px;
+  inset: 0;
   z-index: 3;
   pointer-events: none;
-}
-
-.screen--dirty::before {
-  left: 20px;
-}
-
-.screen--dirty::after {
-  right: 26px;
-  transform: scaleX(-1);
+  background:
+    repeating-linear-gradient(180deg, rgba(86, 66, 44, 0.45) 0 3px, transparent 3px 7px) 20px 20px/2px 22px no-repeat,
+    repeating-linear-gradient(180deg, rgba(86, 66, 44, 0.45) 0 3px, transparent 3px 7px) calc(100% - 26px) 20px/2px 22px no-repeat;
 }
 
 
