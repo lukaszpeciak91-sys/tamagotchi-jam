@@ -1,6 +1,8 @@
 const STORAGE_KEY = "tamagotchi-jam-state-v1";
 const TICK_MS = 20000;
 const MAX_CATCHUP_TICKS = 8;
+const HAPPY_POSE_MS = 2000;
+const SLEEP_POSE_MS = 3000;
 const PETS = {
   penguin: {
     sheet: "assets/pets/penguin/Penguin_sheet.png",
@@ -68,7 +70,7 @@ function clampState(source = state) {
   source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % 5;
   source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
   source.poseOverrideUntilMs = Math.max(0, Number(source.poseOverrideUntilMs) || 0);
-  if (source.poseOverrideUntilMs === 0) source.poseOverride = null;
+  if (source.poseOverride && source.poseOverrideUntilMs <= 0) source.poseOverride = null;
   if (source.poseOverride === null) source.poseOverrideUntilMs = 0;
 
   const legacyModeMap = {
@@ -82,7 +84,19 @@ function clampState(source = state) {
 }
 
 function applyPoseExpiry(nowMs) {
-  if (!state.poseOverride || state.poseOverrideUntilMs <= 0 || nowMs < state.poseOverrideUntilMs) {
+  if (!state.poseOverride) {
+    return false;
+  }
+
+  if (state.poseOverrideUntilMs <= 0) {
+    state.poseOverride = null;
+    state.poseOverrideUntilMs = 0;
+    state.poseOverrideTicks = 0;
+    clampState();
+    return true;
+  }
+
+  if (nowMs < state.poseOverrideUntilMs) {
     return false;
   }
 
@@ -301,7 +315,7 @@ function init() {
         state.hunger = Math.max(0, state.hunger - 1);
         state.bored = Math.min(4, state.bored + 0);
       },
-      { poseOverride: "happy", poseOverrideDurationMs: 2000 },
+      { poseOverride: "happy", poseOverrideDurationMs: HAPPY_POSE_MS },
     );
   });
 
@@ -310,7 +324,7 @@ function init() {
       () => {
         state.sleep = Math.max(0, state.sleep - 1);
       },
-      { poseOverride: "sleepy", poseOverrideDurationMs: 3000 },
+      { poseOverride: "sleepy", poseOverrideDurationMs: SLEEP_POSE_MS },
     );
   });
 
@@ -339,7 +353,7 @@ function init() {
           state.sleep = Math.min(4, state.sleep + 1);
         }
       },
-      { happyTicks: 2, poseOverride: "happy", poseOverrideDurationMs: 2000 },
+      { happyTicks: 2, poseOverride: "happy", poseOverrideDurationMs: HAPPY_POSE_MS },
     );
   });
 
