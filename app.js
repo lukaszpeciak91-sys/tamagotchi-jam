@@ -68,9 +68,8 @@ function clampState(source = state) {
   source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % 5;
   source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
   source.poseOverrideUntilMs = Math.max(0, Number(source.poseOverrideUntilMs) || 0);
-  if (source.poseOverride && source.poseOverrideUntilMs === 0 && source.poseOverrideTicks === 0) {
-    source.poseOverride = null;
-  }
+  if (source.poseOverrideUntilMs === 0) source.poseOverride = null;
+  if (source.poseOverride === null) source.poseOverrideUntilMs = 0;
 
   const legacyModeMap = {
     sleep: "sleepy",
@@ -80,6 +79,18 @@ function clampState(source = state) {
   source.petMode = validModes.has(normalizedMode) ? normalizedMode : "idle";
 
   return source;
+}
+
+function applyPoseExpiry(nowMs) {
+  if (!state.poseOverride || state.poseOverrideUntilMs <= 0 || nowMs < state.poseOverrideUntilMs) {
+    return false;
+  }
+
+  state.poseOverride = null;
+  state.poseOverrideUntilMs = 0;
+  state.poseOverrideTicks = 0;
+  clampState();
+  return true;
 }
 
 function loadState() {
@@ -142,23 +153,8 @@ function renderDots(targetId, value) {
   document.getElementById(targetId).innerHTML = dots;
 }
 
-function expirePoseOverrideIfNeeded() {
-  if (!state.poseOverride || state.poseOverrideUntilMs <= 0 || Date.now() < state.poseOverrideUntilMs) {
-    return false;
-  }
-
-  state.poseOverride = null;
-  state.poseOverrideUntilMs = 0;
-  state.poseOverrideTicks = 0;
-  return true;
-}
-
 function render() {
   clampState();
-
-  if (expirePoseOverrideIfNeeded()) {
-    saveState();
-  }
 
   renderDots("hungerDots", state.hunger);
   renderDots("sleepDots", state.sleep);
@@ -256,8 +252,9 @@ function applyTick() {
 }
 
 function checkTick() {
-  if (expirePoseOverrideIfNeeded()) {
+  if (applyPoseExpiry(Date.now())) {
     saveState();
+    render();
   }
 
   if (state.phase === "egg") return;
@@ -382,6 +379,12 @@ function init() {
   });
 
   setInterval(checkTick, 1000);
+  setInterval(() => {
+    if (applyPoseExpiry(Date.now())) {
+      saveState();
+      render();
+    }
+  }, 250);
 
   if (state.phase !== "egg") {
     state.petMode = derivePetMode(state);
