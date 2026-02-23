@@ -231,6 +231,8 @@ function transitionToSelect() {
   Object.assign(state, { ...defaultState, lastTick: Date.now() });
   state.phase = "select";
   state.selectedPet = null;
+}
+
 function applyPoseExpiry(nowMs) {
   if (!state.poseOverride) {
     return false;
