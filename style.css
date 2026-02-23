@@ -178,6 +178,11 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(2px, 1.2vw, 8px);
+  padding: 0 clamp(6px, 3vw, 16px) clamp(8px, 3.5vh, 20px);
 }
 
 .poop {
@@ -185,32 +190,25 @@ body {
 }
 
 .poop--ui {
-  width: 48px;
-  height: 48px;
+  --poop-size: clamp(24px, 8vw, 44px);
+  width: var(--poop-size);
+  height: var(--poop-size);
   background-image: var(--poop-icon);
   background-size: contain;
   background-repeat: no-repeat;
   image-rendering: pixelated;
-  position: absolute;
-  bottom: 6px;
-  left: 14px;
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  transform: translateY(calc((var(--poop-count) - var(--poop-index) - 1) * -1px));
 }
 
 .poop--ui::before {
   content: "💩";
-  font-size: 40px;
+  font-size: calc(var(--poop-size) * 0.9);
   line-height: 1;
   display: block;
-}
-
-.poop--1 {
-  left: 14px;
-  bottom: 6px;
-}
-
-.poop--2 {
-  right: 14px;
-  bottom: 6px;
 }
 
 .screen--dirty::before,
