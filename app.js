@@ -18,11 +18,120 @@ const PETS = {
       dead: { col: 2, row: 1 },
     },
   },
+  bee: {
+    sheet: "assets/pets/bee/Bee_sheet.png",
+    cols: 3,
+    rows: 2,
+    map: {
+      idle: { col: 0, row: 0 },
+      happy: { col: 1, row: 0 },
+      hungry: { col: 2, row: 0 },
+      bored: { col: 0, row: 0 },
+      sleep: { col: 0, row: 1 },
+      sleepy: { col: 0, row: 1 },
+      poop: { col: 1, row: 1 },
+      dirty: { col: 1, row: 1 },
+      dead: { col: 2, row: 1 },
+    },
+  },
+  bear: {
+    sheet: "assets/pets/bear/Bear_sheet.png",
+    cols: 3,
+    rows: 2,
+    map: {
+      idle: { col: 0, row: 0 },
+      happy: { col: 1, row: 0 },
+      hungry: { col: 2, row: 0 },
+      bored: { col: 0, row: 0 },
+      sleep: { col: 0, row: 1 },
+      sleepy: { col: 0, row: 1 },
+      poop: { col: 1, row: 1 },
+      dirty: { col: 1, row: 1 },
+      dead: { col: 2, row: 1 },
+    },
+  },
+  boar: {
+    sheet: "assets/pets/boar/Boar_sheet.png",
+    cols: 3,
+    rows: 2,
+    map: {
+      idle: { col: 0, row: 0 },
+      happy: { col: 1, row: 0 },
+      hungry: { col: 2, row: 0 },
+      bored: { col: 0, row: 0 },
+      sleep: { col: 0, row: 1 },
+      sleepy: { col: 0, row: 1 },
+      poop: { col: 1, row: 1 },
+      dirty: { col: 1, row: 1 },
+      dead: { col: 2, row: 1 },
+    },
+  },
+  kukong: {
+    sheet: "assets/pets/kukong/Kukong_sheet.png",
+    cols: 3,
+    rows: 2,
+    map: {
+      idle: { col: 0, row: 0 },
+      happy: { col: 1, row: 0 },
+      hungry: { col: 2, row: 0 },
+      bored: { col: 0, row: 0 },
+      sleep: { col: 0, row: 1 },
+      sleepy: { col: 0, row: 1 },
+      poop: { col: 1, row: 1 },
+      dirty: { col: 1, row: 1 },
+      dead: { col: 2, row: 1 },
+    },
+  },
+  shark: {
+    sheet: "assets/pets/shark/Shark_sheet.png",
+    cols: 3,
+    rows: 2,
+    map: {
+      idle: { col: 0, row: 0 },
+      happy: { col: 1, row: 0 },
+      hungry: { col: 2, row: 0 },
+      bored: { col: 0, row: 0 },
+      sleep: { col: 0, row: 1 },
+      sleepy: { col: 0, row: 1 },
+      poop: { col: 1, row: 1 },
+      dirty: { col: 1, row: 1 },
+      dead: { col: 2, row: 1 },
+    },
+  },
+  sloth: {
+    sheet: "assets/pets/sloth/Sloth_sheet.png",
+    cols: 3,
+    rows: 2,
+    map: {
+      idle: { col: 0, row: 0 },
+      happy: { col: 1, row: 0 },
+      hungry: { col: 2, row: 0 },
+      bored: { col: 0, row: 0 },
+      sleep: { col: 0, row: 1 },
+      sleepy: { col: 0, row: 1 },
+      poop: { col: 1, row: 1 },
+      dirty: { col: 1, row: 1 },
+      dead: { col: 2, row: 1 },
+    },
+  },
 };
 const DEFAULT_PET = "penguin";
 
+const PET_OPTIONS = [
+  { id: "penguin", label: "Penguin" },
+  { id: "bee", label: "Bee" },
+  { id: "bear", label: "Bear" },
+  { id: "boar", label: "Boar" },
+  { id: "kukong", label: "Kukong" },
+  { id: "shark", label: "Shark" },
+  { id: "sloth", label: "Sloth" },
+];
+
+const sheetLoadState = {};
+
 const defaultState = {
-  phase: "egg",
+  phase: "select",
+  selectedPet: null,
   eggTaps: 0,
   hunger: 1,
   sleep: 0,
@@ -47,16 +156,23 @@ function clampStat(value) {
 }
 
 function clampState(source = state) {
-  const validPhases = new Set(["egg", "pet", "dead"]);
-  source.phase = validPhases.has(source.phase) ? source.phase : "pet";
+  const validPhases = new Set(["select", "egg", "pet", "dead"]);
+  source.phase = validPhases.has(source.phase) ? source.phase : "select";
+  source.selectedPet = typeof source.selectedPet === "string" && PETS[source.selectedPet]
+    ? source.selectedPet
+    : null;
   source.eggTaps = Math.max(0, Math.min(10, Number(source.eggTaps) || 0));
   source.hunger = clampStat(source.hunger);
   source.sleep = clampStat(source.sleep);
   source.poop = clampStat(source.poop);
   source.bored = clampStat(source.bored);
   source.life = source.life === "dead" ? "dead" : "alive";
-  if (source.life === "dead") {
-    source.phase = "dead";
+  if (source.life === "dead" || source.phase === "dead") {
+    source.phase = "select";
+    source.selectedPet = null;
+    source.life = "alive";
+    source.eggTaps = 0;
+    source.criticalTickStreak = 0;
   }
   source.tickCounter = Math.max(0, Number(source.tickCounter) || 0);
   source.lastTick = Number(source.lastTick) || Date.now();
@@ -80,6 +196,40 @@ function clampState(source = state) {
   source.petMode = validModes.has(normalizedMode) ? normalizedMode : "idle";
 
   return source;
+}
+
+function isPetSheetAvailable(petId) {
+  const config = PETS[petId];
+  if (!config) return false;
+  if (sheetLoadState[petId] === false) return false;
+  if (sheetLoadState[petId] === true) return true;
+
+  const image = new Image();
+  image.onload = () => {
+    sheetLoadState[petId] = true;
+  };
+  image.onerror = () => {
+    sheetLoadState[petId] = false;
+    if (state.phase === "pet") {
+      render();
+    }
+  };
+  image.src = config.sheet;
+  sheetLoadState[petId] = true;
+  return true;
+}
+
+function getActivePetId() {
+  const preferredPet = state.selectedPet ?? DEFAULT_PET;
+  if (isPetSheetAvailable(preferredPet)) return preferredPet;
+  return DEFAULT_PET;
+}
+
+function transitionToSelect() {
+  // New life starts at pet selection.
+  Object.assign(state, { ...defaultState, lastTick: Date.now() });
+  state.phase = "select";
+  state.selectedPet = null;
 }
 
 function loadState() {
@@ -170,7 +320,8 @@ function render() {
 
   const petElement = document.getElementById("pet");
   const eggElement = document.getElementById("egg");
-  const petConfig = PETS[DEFAULT_PET];
+  const selectElement = document.getElementById("petSelect");
+  const petConfig = PETS[getActivePetId()] ?? PETS[DEFAULT_PET];
   const frame = petConfig.map[renderMode] ?? petConfig.map.idle ?? { col: 0, row: 0 };
 
   petElement.style.setProperty("--pet-col", frame.col);
@@ -182,6 +333,7 @@ function render() {
   petElement.className = `pet pet--${renderMode}`;
   petElement.hidden = state.phase !== "pet" && state.phase !== "dead";
   eggElement.hidden = state.phase !== "egg";
+  selectElement.hidden = state.phase !== "select";
   eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
 
   const screenElement = document.getElementById("screen");
@@ -196,7 +348,7 @@ function render() {
 
   renderPoop();
 
-  const actionDisabled = state.life === "dead" || state.phase === "egg";
+  const actionDisabled = state.life === "dead" || state.phase === "egg" || state.phase === "select";
   ["feedBtn", "sleepBtn", "cleanBtn", "playBtn"].forEach((id) => {
     document.getElementById(id).disabled = actionDisabled;
   });
@@ -209,7 +361,7 @@ function render() {
 }
 
 function applyTick() {
-  if (state.phase === "egg") return;
+  if (state.phase === "egg" || state.phase === "select") return;
   if (state.life === "dead") return;
 
   state.tickCounter += 1;
@@ -246,8 +398,7 @@ function applyTick() {
   state.criticalTickStreak = hasCriticalStat ? state.criticalTickStreak + 1 : 0;
 
   if (state.criticalTickStreak >= 2) {
-    state.life = "dead";
-    state.petMode = "dead";
+    transitionToSelect();
   } else {
     state.petMode = derivePetMode(state);
   }
@@ -260,7 +411,7 @@ function checkTick() {
     saveState();
   }
 
-  if (state.phase === "egg") return;
+  if (state.phase === "egg" || state.phase === "select") return;
   if (state.life === "dead") return;
 
   const now = Date.now();
@@ -283,7 +434,7 @@ function applyAction(
   mutator,
   { happyTicks = 0, poseOverride = null, poseOverrideDurationMs = 0 } = {},
 ) {
-  if (state.phase === "egg") return;
+  if (state.phase === "egg" || state.phase === "select") return;
   if (state.life === "dead") return;
 
   mutator();
@@ -318,7 +469,7 @@ function init() {
   });
 
   document.getElementById("cleanBtn").addEventListener("click", () => {
-    if (state.phase === "egg") return;
+    if (state.phase === "egg" || state.phase === "select") return;
     if (state.life === "dead") return;
 
     if (state.poop > 0) {
@@ -348,10 +499,31 @@ function init() {
 
   document.getElementById("resetBtn").addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
-    Object.assign(state, { ...defaultState, lastTick: Date.now() });
+    transitionToSelect();
+    saveState();
+    render();
+  });
+
+  document.getElementById("petSelect").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-pet-option]");
+    if (!button) return;
+
+    const selectedPet = button.getAttribute("data-pet-option");
+    if (!PETS[selectedPet]) return;
+
+    // Selection is one-time for this life and transitions into egg.
+    state.selectedPet = selectedPet;
     state.phase = "egg";
     state.eggTaps = 0;
+    state.life = "alive";
     state.petMode = "idle";
+    state.lastTick = Date.now();
+    state.criticalTickStreak = 0;
+    state.poseOverride = null;
+    state.poseOverrideTicks = 0;
+    state.poseOverrideUntilMs = 0;
+
+    clampState();
     saveState();
     render();
   });
@@ -383,9 +555,14 @@ function init() {
 
   setInterval(checkTick, 1000);
 
-  if (state.phase !== "egg") {
+  if (state.phase !== "egg" && state.phase !== "select") {
     state.petMode = derivePetMode(state);
   }
+
+  document.getElementById("petSelect").innerHTML = PET_OPTIONS.map(({ id, label }) => {
+    return `<button class="pet-choice" type="button" data-pet-option="${id}">${label}</button>`;
+  }).join("");
+
   saveState();
   render();
 }
