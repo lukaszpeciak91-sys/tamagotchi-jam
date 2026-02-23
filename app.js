@@ -654,6 +654,15 @@ function checkTick() {
   render();
 }
 
+function cycleBackground(step) {
+  state.bgIndex = (state.bgIndex + step + BG_VARIANTS) % BG_VARIANTS;
+  state.bgTickCounter = 0;
+  state.nextBgChangeInTicks = randomBgTickInterval();
+  clampState();
+  saveState();
+  render();
+}
+
 function applyAction(
   mutator,
   { happyTicks = 0, poseOverride = null, poseOverrideDurationMs = 0 } = {},
@@ -727,6 +736,16 @@ function init() {
     transitionToSelect();
     saveState();
     render();
+  });
+
+  document.getElementById("nextBgBtn")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    cycleBackground(1);
+  });
+
+  document.getElementById("prevBgBtn")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    cycleBackground(-1);
   });
 
   document.getElementById("petSelect").addEventListener("click", (event) => {
