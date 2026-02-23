@@ -3,6 +3,13 @@ const TICK_MS = 20000;
 const MAX_CATCHUP_TICKS = 8;
 const HAPPY_POSE_MS = 2000;
 const SLEEP_POSE_MS = 3000;
+const MOVE_INTERVAL_MIN_MS = 2000;
+const MOVE_INTERVAL_MAX_MS = 4000;
+const MOVE_EPSILON_PX = 2;
+const MOVE_SAFE_MARGIN_PX = 12;
+const MOVE_NORMAL_SPEED_PX_PER_S = 64;
+const MOVE_SLOW_SPEED_PX_PER_S = 34;
+const MOVE_POSE_SPEED_FACTOR = 0.88;
 const PETS = {
   penguin: {
     sheet: "assets/pets/penguin/Penguin_sheet.png",
@@ -150,6 +157,7 @@ const defaultState = {
   tickCounter: 0,
   lastTick: Date.now(),
   criticalTickStreak: 0,
+  walkSeed: 0,
 };
 
 const state = loadState();
@@ -175,10 +183,12 @@ function clampState(source = state) {
     source.life = "alive";
     source.eggTaps = 0;
     source.criticalTickStreak = 0;
+    source.walkSeed = 0;
   }
   source.tickCounter = Math.max(0, Number(source.tickCounter) || 0);
   source.lastTick = Number(source.lastTick) || Date.now();
   source.criticalTickStreak = Math.max(0, Number(source.criticalTickStreak) || 0);
+  source.walkSeed = Math.max(1, Math.floor(Number(source.walkSeed) || 0));
   source.happyTicksRemaining = Math.max(0, Number(source.happyTicksRemaining) || 0);
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
@@ -231,6 +241,8 @@ function transitionToSelect() {
   Object.assign(state, { ...defaultState, lastTick: Date.now() });
   state.phase = "select";
   state.selectedPet = null;
+  state.walkSeed = 0;
+  refreshMovementSeed();
 }
 
 function applyPoseExpiry(nowMs) {
@@ -255,6 +267,163 @@ function applyPoseExpiry(nowMs) {
   state.poseOverrideTicks = 0;
   clampState();
   return true;
+}
+
+const movement = {
+  x: 0,
+  y: 0,
+  targetX: 0,
+  targetY: 0,
+  minX: 0,
+  maxX: 0,
+  minY: 0,
+  maxY: 0,
+  nextTargetAtMs: 0,
+  lastFrameAtMs: 0,
+  speedPxPerS: 0,
+  seededRandom: null,
+};
+
+function makeSeededRandom(seed) {
+  let seedValue = Math.max(1, Math.floor(seed) || 1) >>> 0;
+  return () => {
+    seedValue += 0x6D2B79F5;
+    let t = seedValue;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function randomBetween(min, max) {
+  const rand = movement.seededRandom ? movement.seededRandom() : Math.random();
+  return min + (max - min) * rand;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function isSlowMode() {
+  return state.petMode === "sleepy" || state.petMode === "hungry" || state.petMode === "dirty";
+}
+
+function updateMovementBounds() {
+  const screen = document.getElementById("screen");
+  const petMover = document.getElementById("petMover");
+  const pet = document.getElementById("pet");
+  if (!screen || !petMover || !pet) return;
+
+  const screenRect = screen.getBoundingClientRect();
+  const petRect = pet.getBoundingClientRect();
+  const safeMargin = MOVE_SAFE_MARGIN_PX;
+
+  movement.minX = safeMargin;
+  movement.maxX = Math.max(movement.minX, screenRect.width - petRect.width - safeMargin);
+  movement.minY = safeMargin;
+  movement.maxY = Math.max(movement.minY, screenRect.height - petRect.height - safeMargin);
+
+  movement.x = clamp(movement.x, movement.minX, movement.maxX);
+  movement.y = clamp(movement.y, movement.minY, movement.maxY);
+  movement.targetX = clamp(movement.targetX, movement.minX, movement.maxX);
+  movement.targetY = clamp(movement.targetY, movement.minY, movement.maxY);
+
+  petMover.style.transform = `translate(${movement.x.toFixed(2)}px, ${movement.y.toFixed(2)}px)`;
+}
+
+function scheduleNextTarget(nowMs) {
+  movement.nextTargetAtMs = nowMs + randomBetween(MOVE_INTERVAL_MIN_MS, MOVE_INTERVAL_MAX_MS);
+}
+
+function pickNextTarget(nowMs) {
+  const currentX = movement.x;
+  const currentY = movement.y;
+
+  if (isSlowMode()) {
+    const maxStepX = Math.max(24, (movement.maxX - movement.minX) * 0.3);
+    const maxStepY = Math.max(20, (movement.maxY - movement.minY) * 0.28);
+    movement.targetX = clamp(currentX + randomBetween(-maxStepX, maxStepX), movement.minX, movement.maxX);
+    movement.targetY = clamp(currentY + randomBetween(-maxStepY, maxStepY), movement.minY, movement.maxY);
+  } else {
+    movement.targetX = randomBetween(movement.minX, movement.maxX);
+    movement.targetY = randomBetween(movement.minY, movement.maxY);
+  }
+
+  scheduleNextTarget(nowMs);
+}
+
+function refreshMovementSeed() {
+  if (!state.walkSeed) {
+    state.walkSeed = Math.floor((Date.now() ^ ((Math.random() * 0xFFFFFFFF) >>> 0)) >>> 0) || 1;
+    saveState();
+  }
+  movement.seededRandom = makeSeededRandom(state.walkSeed);
+}
+
+function updatePetMovement(nowMs) {
+  const petMover = document.getElementById("petMover");
+  if (!petMover) return;
+
+  const movementDisabled = state.phase === "egg" || state.phase === "select" || state.life === "dead";
+  if (movementDisabled) {
+    movement.lastFrameAtMs = nowMs;
+    petMover.style.transform = `translate(${movement.x.toFixed(2)}px, ${movement.y.toFixed(2)}px)`;
+    return;
+  }
+
+  const dtMs = movement.lastFrameAtMs ? Math.min(80, nowMs - movement.lastFrameAtMs) : 16;
+  movement.lastFrameAtMs = nowMs;
+
+  if (!movement.nextTargetAtMs || nowMs >= movement.nextTargetAtMs) {
+    pickNextTarget(nowMs);
+  }
+
+  const dx = movement.targetX - movement.x;
+  const dy = movement.targetY - movement.y;
+  const distance = Math.hypot(dx, dy);
+
+  let speed = isSlowMode() ? MOVE_SLOW_SPEED_PX_PER_S : MOVE_NORMAL_SPEED_PX_PER_S;
+  if (state.poseOverride) speed *= MOVE_POSE_SPEED_FACTOR;
+  movement.speedPxPerS = speed;
+
+  if (distance > MOVE_EPSILON_PX) {
+    const maxStep = speed * (dtMs / 1000);
+    if (distance <= maxStep) {
+      movement.x = movement.targetX;
+      movement.y = movement.targetY;
+    } else {
+      movement.x += (dx / distance) * maxStep;
+      movement.y += (dy / distance) * maxStep;
+    }
+  }
+
+  movement.x = clamp(movement.x, movement.minX, movement.maxX);
+  movement.y = clamp(movement.y, movement.minY, movement.maxY);
+  petMover.style.transform = `translate(${movement.x.toFixed(2)}px, ${movement.y.toFixed(2)}px)`;
+}
+
+function movementLoop(nowMs) {
+  updatePetMovement(nowMs);
+  requestAnimationFrame(movementLoop);
+}
+
+function initPetMovement() {
+  refreshMovementSeed();
+  updateMovementBounds();
+  movement.x = randomBetween(movement.minX, movement.maxX);
+  movement.y = randomBetween(movement.minY, movement.maxY);
+  movement.targetX = movement.x;
+  movement.targetY = movement.y;
+  movement.lastFrameAtMs = performance.now();
+  scheduleNextTarget(movement.lastFrameAtMs);
+
+  const petMover = document.getElementById("petMover");
+  if (petMover) {
+    petMover.style.transform = `translate(${movement.x.toFixed(2)}px, ${movement.y.toFixed(2)}px)`;
+  }
+
+  window.addEventListener("resize", updateMovementBounds);
+  requestAnimationFrame(movementLoop);
 }
 
 function loadState() {
@@ -333,6 +502,7 @@ function render() {
   const renderMode = state.poseOverride ?? state.petMode;
 
   const petElement = document.getElementById("pet");
+  const petMoverElement = document.getElementById("petMover");
   const eggElement = document.getElementById("egg");
   const selectElement = document.getElementById("petSelect");
   const petConfig = PETS[getActivePetId()] ?? PETS[DEFAULT_PET];
@@ -340,6 +510,7 @@ function render() {
 
   petElement.className = `pet pet--${renderMode}`;
   petElement.hidden = !isPetPhase;
+  if (petMoverElement) petMoverElement.hidden = !isPetPhase;
 
   const frameWidth = isPetPhase ? petElement.offsetWidth : 0;
   const frameHeight = isPetPhase ? petElement.offsetHeight : 0;
@@ -376,8 +547,16 @@ function render() {
   const poseRemainingMs = state.poseOverrideUntilMs
     ? Math.max(0, state.poseOverrideUntilMs - Date.now())
     : 0;
-  document.getElementById("debugLine").textContent =
-    `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter}`;
+  const debugRoot = document.querySelector(".debug");
+  if (debugRoot?.open) {
+    const nextMoveInMs = Math.max(0, Math.round(movement.nextTargetAtMs - performance.now()));
+    document.getElementById("debugLine").textContent =
+      `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter} pos:(${movement.x.toFixed(1)},${movement.y.toFixed(1)}) target:(${movement.targetX.toFixed(1)},${movement.targetY.toFixed(1)}) nextMoveInMs:${nextMoveInMs} speed:${movement.speedPxPerS.toFixed(1)}`;
+  }
+
+  if (isPetPhase) {
+    updateMovementBounds();
+  }
 }
 
 function applyTick() {
@@ -545,6 +724,8 @@ function init() {
     state.poseOverride = null;
     state.poseOverrideTicks = 0;
     state.poseOverrideUntilMs = 0;
+    state.walkSeed = 0;
+    refreshMovementSeed();
 
     clampState();
     saveState();
@@ -566,6 +747,8 @@ function init() {
       state.phase = "pet";
       state.petMode = derivePetMode(state);
       state.lastTick = Date.now();
+      refreshMovementSeed();
+      pickNextTarget(performance.now());
       document.getElementById("screen").classList.add("screen--hatch");
       setTimeout(() => {
         document.getElementById("screen").classList.remove("screen--hatch");
@@ -594,6 +777,7 @@ function init() {
 
   saveState();
   render();
+  initPetMovement();
 }
 
 init();
