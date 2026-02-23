@@ -263,6 +263,11 @@ body {
   box-shadow: inset 0 -2px 0 rgba(121, 95, 65, 0.2);
 }
 
+.pet-select[hidden] {
+  display: none !important;
+  pointer-events: none;
+}
+
 .pet-choice {
   border: 2px solid #7b654c;
   border-radius: 8px;
