@@ -240,10 +240,12 @@ body {
   transform: translateY(0);
   overflow: hidden;
   background-repeat: no-repeat;
-  background-size: calc(var(--pet-cols) * 100%) calc(var(--pet-rows) * 100%);
+  background-size:
+    calc(var(--pet-cols) * var(--pet-frame-w, 100%))
+    calc(var(--pet-rows) * var(--pet-frame-h, 100%));
   background-position:
-    calc(var(--pet-col) * 100% / (var(--pet-cols) - 1))
-    calc(var(--pet-row) * 100% / (var(--pet-rows) - 1));
+    calc(var(--pet-col) * var(--pet-frame-w, 100%) * -1)
+    calc(var(--pet-row) * var(--pet-frame-h, 100%) * -1);
   animation: pet-idle 2.6s ease-in-out infinite;
 }
 
