@@ -759,7 +759,9 @@ function init() {
     state.poseOverride = null;
     state.poseOverrideTicks = 0;
     state.poseOverrideUntilMs = 0;
-    state.walkSeed = 0;
+    if ("walkSeed" in state) {
+      state.walkSeed = 0;
+    }
     state.nextBgChangeInTicks = randomBgTickInterval();
     state.pendingPoop = 0;
     state.petX = null;
