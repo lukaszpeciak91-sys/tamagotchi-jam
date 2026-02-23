@@ -158,6 +158,8 @@ const defaultState = {
   lastTick: Date.now(),
   criticalTickStreak: 0,
   walkSeed: 0,
+  petX: null,
+  petY: null,
 };
 
 const state = loadState();
@@ -177,18 +179,13 @@ function clampState(source = state) {
   source.poop = clampStat(source.poop);
   source.bored = clampStat(source.bored);
   source.life = source.life === "dead" ? "dead" : "alive";
-  if (source.life === "dead" || source.phase === "dead") {
-    source.phase = "select";
-    source.selectedPet = null;
-    source.life = "alive";
-    source.eggTaps = 0;
-    source.criticalTickStreak = 0;
-    source.walkSeed = 0;
-  }
+  if (source.phase === "dead") source.phase = "pet";
   source.tickCounter = Math.max(0, Number(source.tickCounter) || 0);
   source.lastTick = Number(source.lastTick) || Date.now();
   source.criticalTickStreak = Math.max(0, Number(source.criticalTickStreak) || 0);
   source.walkSeed = Math.max(1, Math.floor(Number(source.walkSeed) || 0));
+  source.petX = Number.isFinite(Number(source.petX)) ? Number(source.petX) : null;
+  source.petY = Number.isFinite(Number(source.petY)) ? Number(source.petY) : null;
   source.happyTicksRemaining = Math.max(0, Number(source.happyTicksRemaining) || 0);
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
@@ -308,6 +305,10 @@ function isSlowMode() {
   return state.petMode === "sleepy" || state.petMode === "hungry" || state.petMode === "dirty";
 }
 
+function isMovementPaused() {
+  return Boolean(state.poseOverride) || state.life === "dead";
+}
+
 function updateMovementBounds() {
   const screen = document.getElementById("screen");
   const petMover = document.getElementById("petMover");
@@ -364,8 +365,14 @@ function updatePetMovement(nowMs) {
   const petMover = document.getElementById("petMover");
   if (!petMover) return;
 
-  const movementDisabled = state.phase === "egg" || state.phase === "select" || state.life === "dead";
+  const movementDisabled = state.phase === "egg" || state.phase === "select";
   if (movementDisabled) {
+    movement.lastFrameAtMs = nowMs;
+    petMover.style.transform = `translate(${movement.x.toFixed(2)}px, ${movement.y.toFixed(2)}px)`;
+    return;
+  }
+
+  if (isMovementPaused()) {
     movement.lastFrameAtMs = nowMs;
     petMover.style.transform = `translate(${movement.x.toFixed(2)}px, ${movement.y.toFixed(2)}px)`;
     return;
@@ -399,6 +406,8 @@ function updatePetMovement(nowMs) {
 
   movement.x = clamp(movement.x, movement.minX, movement.maxX);
   movement.y = clamp(movement.y, movement.minY, movement.maxY);
+  state.petX = movement.x;
+  state.petY = movement.y;
   petMover.style.transform = `translate(${movement.x.toFixed(2)}px, ${movement.y.toFixed(2)}px)`;
 }
 
@@ -410,10 +419,17 @@ function movementLoop(nowMs) {
 function initPetMovement() {
   refreshMovementSeed();
   updateMovementBounds();
-  movement.x = randomBetween(movement.minX, movement.maxX);
-  movement.y = randomBetween(movement.minY, movement.maxY);
+  if (Number.isFinite(state.petX) && Number.isFinite(state.petY)) {
+    movement.x = clamp(state.petX, movement.minX, movement.maxX);
+    movement.y = clamp(state.petY, movement.minY, movement.maxY);
+  } else {
+    movement.x = randomBetween(movement.minX, movement.maxX);
+    movement.y = randomBetween(movement.minY, movement.maxY);
+  }
   movement.targetX = movement.x;
   movement.targetY = movement.y;
+  state.petX = movement.x;
+  state.petY = movement.y;
   movement.lastFrameAtMs = performance.now();
   scheduleNextTarget(movement.lastFrameAtMs);
 
@@ -597,7 +613,13 @@ function applyTick() {
   state.criticalTickStreak = hasCriticalStat ? state.criticalTickStreak + 1 : 0;
 
   if (state.criticalTickStreak >= 2) {
-    transitionToSelect();
+    state.life = "dead";
+    state.poseOverride = null;
+    state.poseOverrideTicks = 0;
+    state.poseOverrideUntilMs = 0;
+    state.petMode = "dead";
+    state.petX = movement.x;
+    state.petY = movement.y;
   } else {
     state.petMode = derivePetMode(state);
   }
@@ -725,6 +747,8 @@ function init() {
     state.poseOverrideTicks = 0;
     state.poseOverrideUntilMs = 0;
     state.walkSeed = 0;
+    state.petX = null;
+    state.petY = null;
     refreshMovementSeed();
 
     clampState();
@@ -747,6 +771,11 @@ function init() {
       state.phase = "pet";
       state.petMode = derivePetMode(state);
       state.lastTick = Date.now();
+      state.life = "alive";
+      state.criticalTickStreak = 0;
+      state.poseOverride = null;
+      state.poseOverrideTicks = 0;
+      state.poseOverrideUntilMs = 0;
       refreshMovementSeed();
       pickNextTarget(performance.now());
       document.getElementById("screen").classList.add("screen--hatch");
