@@ -175,6 +175,88 @@ body {
     linear-gradient(180deg, #7ce26f 0%, #5ccc52 100%);
 }
 
+.bg-6 {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0 30%, rgba(176, 209, 239, 0.28) 30% 100%),
+    repeating-linear-gradient(90deg, rgba(228, 238, 247, 0.35) 0 2px, rgba(143, 170, 196, 0.28) 2px 4px, transparent 4px 52px),
+    radial-gradient(90px 60px at 18% 26%, rgba(255, 237, 194, 0.45), transparent 72%),
+    radial-gradient(110px 70px at 79% 72%, rgba(165, 206, 242, 0.36), transparent 72%),
+    linear-gradient(180deg, #b9d2e7 0%, #95b3ce 52%, #6f8ca8 100%);
+}
+
+.pet-screen.bg-6 .poop-layer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.22;
+  background:
+    repeating-linear-gradient(104deg, transparent 0 8px, rgba(220, 239, 255, 0.55) 8px 10px, transparent 10px 18px),
+    repeating-linear-gradient(101deg, transparent 0 16px, rgba(238, 248, 255, 0.48) 16px 18px, transparent 18px 30px);
+  background-size: 140% 170%, 125% 160%;
+  animation: rainy-window-drift 6.8s linear infinite;
+}
+
+.bg-7 {
+  background:
+    radial-gradient(circle at 72% 20%, rgba(255, 229, 137, 0.96) 0 14px, rgba(255, 191, 103, 0.78) 15px 38px, transparent 39px),
+    linear-gradient(180deg, transparent 62%, rgba(47, 126, 67, 0.58) 62% 100%),
+    radial-gradient(120px 56px at 16% 77%, rgba(87, 163, 89, 0.62), transparent 72%),
+    radial-gradient(150px 64px at 84% 81%, rgba(74, 148, 87, 0.58), transparent 72%),
+    linear-gradient(180deg, #ffd9a0 0%, #ffb98a 45%, #ff9e8d 62%, #7bcf7c 100%);
+}
+
+.bg-8 {
+  background:
+    linear-gradient(180deg, rgba(255, 236, 204, 0.14) 0 38%, transparent 39% 100%),
+    radial-gradient(120px 70px at 18% 26%, rgba(255, 194, 144, 0.2), transparent 72%),
+    radial-gradient(140px 82px at 82% 12%, rgba(135, 145, 255, 0.24), transparent 72%),
+    linear-gradient(180deg, #2f355f 0%, #242a4c 50%, #20253f 65%, #4f3f57 100%);
+}
+
+.pet-screen.bg-8::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.28;
+  background:
+    radial-gradient(130px 95px at 28% 76%, rgba(255, 198, 150, 0.5), transparent 72%),
+    radial-gradient(160px 110px at 76% 34%, rgba(173, 165, 255, 0.42), transparent 74%);
+}
+
+.bg-9 {
+  background:
+    radial-gradient(circle at 26% 18%, rgba(255, 88, 238, 0.7) 0 20px, transparent 21px),
+    radial-gradient(circle at 80% 32%, rgba(64, 255, 231, 0.6) 0 16px, transparent 17px),
+    repeating-linear-gradient(0deg, rgba(96, 110, 255, 0.2) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(90deg, rgba(255, 103, 226, 0.2) 0 1px, transparent 1px 20px),
+    linear-gradient(180deg, #29154f 0%, #1b113e 56%, #130f30 100%);
+}
+
+.pet-screen.bg-9::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.24;
+  background:
+    linear-gradient(120deg, transparent 0 36%, rgba(255, 121, 230, 0.6) 42%, transparent 50% 100%),
+    linear-gradient(60deg, transparent 0 52%, rgba(83, 252, 241, 0.55) 58%, transparent 66% 100%);
+}
+
+.bg-10 {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 243, 179, 0.94) 0 13px, rgba(255, 225, 138, 0.42) 14px 33px, transparent 34px),
+    radial-gradient(120px 50px at 20% 82%, rgba(145, 206, 126, 0.5), transparent 70%),
+    radial-gradient(140px 62px at 82% 78%, rgba(106, 182, 104, 0.48), transparent 72%),
+    repeating-linear-gradient(90deg, rgba(242, 255, 214, 0.12) 0 2px, transparent 2px 14px),
+    linear-gradient(180deg, #bfefff 0%, #9cdef8 45%, #88d27c 74%, #6db963 100%);
+}
+
 .pet-floor {
   position: absolute;
   left: 12%;
@@ -486,6 +568,15 @@ button:active {
   0% { box-shadow: inset 0 0 0 2px rgba(245, 231, 210, 0.45), inset 0 4px 10px rgba(90, 69, 45, 0.12); }
   40% { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8), inset 0 0 20px rgba(255, 255, 255, 0.8); }
   100% { box-shadow: inset 0 0 0 2px rgba(245, 231, 210, 0.45), inset 0 4px 10px rgba(90, 69, 45, 0.12); }
+}
+
+@keyframes rainy-window-drift {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: -26px 140px, 18px 170px;
+  }
 }
 
 @media (min-width: 640px) {
