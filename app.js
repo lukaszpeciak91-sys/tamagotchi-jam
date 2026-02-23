@@ -142,13 +142,22 @@ function renderDots(targetId, value) {
   document.getElementById(targetId).innerHTML = dots;
 }
 
+function expirePoseOverrideIfNeeded() {
+  if (!state.poseOverride || state.poseOverrideUntilMs <= 0 || Date.now() < state.poseOverrideUntilMs) {
+    return false;
+  }
+
+  state.poseOverride = null;
+  state.poseOverrideUntilMs = 0;
+  state.poseOverrideTicks = 0;
+  return true;
+}
+
 function render() {
   clampState();
 
-  if (state.poseOverride && state.poseOverrideUntilMs && Date.now() >= state.poseOverrideUntilMs) {
-    state.poseOverride = null;
-    state.poseOverrideUntilMs = 0;
-    state.poseOverrideTicks = 0;
+  if (expirePoseOverrideIfNeeded()) {
+    saveState();
   }
 
   renderDots("hungerDots", state.hunger);
@@ -247,10 +256,7 @@ function applyTick() {
 }
 
 function checkTick() {
-  if (state.poseOverride && state.poseOverrideUntilMs && Date.now() >= state.poseOverrideUntilMs) {
-    state.poseOverride = null;
-    state.poseOverrideUntilMs = 0;
-    state.poseOverrideTicks = 0;
+  if (expirePoseOverrideIfNeeded()) {
     saveState();
   }
 
@@ -275,7 +281,7 @@ function checkTick() {
 
 function applyAction(
   mutator,
-  { happyTicks = 0, poseOverride = null, poseOverrideTicks = 0, poseOverrideDurationMs = 0 } = {},
+  { happyTicks = 0, poseOverride = null, poseOverrideDurationMs = 0 } = {},
 ) {
   if (state.phase === "egg") return;
   if (state.life === "dead") return;
@@ -283,7 +289,7 @@ function applyAction(
   mutator();
   state.happyTicksRemaining = happyTicks;
   state.poseOverride = poseOverride;
-  state.poseOverrideTicks = poseOverride ? poseOverrideTicks : 0;
+  state.poseOverrideTicks = 0;
   state.poseOverrideUntilMs = poseOverride ? Date.now() + poseOverrideDurationMs : 0;
   clampState();
   state.petMode = derivePetMode(state);
@@ -298,7 +304,7 @@ function init() {
         state.hunger = Math.max(0, state.hunger - 1);
         state.bored = Math.min(4, state.bored + 0);
       },
-      { poseOverride: "happy", poseOverrideTicks: 0, poseOverrideDurationMs: 2000 },
+      { poseOverride: "happy", poseOverrideDurationMs: 2000 },
     );
   });
 
@@ -307,7 +313,7 @@ function init() {
       () => {
         state.sleep = Math.max(0, state.sleep - 1);
       },
-      { poseOverride: "sleepy", poseOverrideTicks: 0, poseOverrideDurationMs: 3000 },
+      { poseOverride: "sleepy", poseOverrideDurationMs: 3000 },
     );
   });
 
@@ -336,7 +342,7 @@ function init() {
           state.sleep = Math.min(4, state.sleep + 1);
         }
       },
-      { happyTicks: 2, poseOverride: "happy", poseOverrideTicks: 0, poseOverrideDurationMs: 2000 },
+      { happyTicks: 2, poseOverride: "happy", poseOverrideDurationMs: 2000 },
     );
   });
 
