@@ -1,6 +1,7 @@
 const STORAGE_KEY = "tamagotchi-jam-state-v1";
-const TICK_MS = 20000;
+const TICK_MS = 15000;
 const MAX_CATCHUP_TICKS = 8;
+const BG_VARIANTS = 6;
 const HAPPY_POSE_MS = 2000;
 const SLEEP_POSE_MS = 3000;
 const MOVE_INTERVAL_MIN_MS = 2000;
@@ -153,6 +154,8 @@ const defaultState = {
   poseOverrideTicks: 0,
   bgIndex: 0,
   bgTickCounter: 0,
+  nextBgChangeInTicks: 2,
+  pendingPoop: 0,
   poseOverrideUntilMs: 0,
   tickCounter: 0,
   lastTick: Date.now(),
@@ -161,6 +164,10 @@ const defaultState = {
   petX: null,
   petY: null,
 };
+
+function randomBgTickInterval() {
+  return 2 + Math.floor(Math.random() * 2);
+}
 
 const state = loadState();
 function clampStat(value) {
@@ -190,8 +197,10 @@ function clampState(source = state) {
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
-  source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % 5;
+  source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % BG_VARIANTS;
   source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
+  source.nextBgChangeInTicks = Math.max(2, Math.min(3, Math.floor(Number(source.nextBgChangeInTicks) || 2)));
+  source.pendingPoop = Math.max(0, Math.floor(Number(source.pendingPoop) || 0));
   source.poseOverrideUntilMs = Math.max(0, Number(source.poseOverrideUntilMs) || 0);
   if (source.poseOverride && source.poseOverrideUntilMs <= 0) source.poseOverride = null;
   if (source.poseOverride === null) source.poseOverrideUntilMs = 0;
@@ -236,6 +245,7 @@ function getActivePetId() {
 function transitionToSelect() {
   // New life starts at pet selection.
   Object.assign(state, { ...defaultState, lastTick: Date.now() });
+  state.nextBgChangeInTicks = randomBgTickInterval();
   state.phase = "select";
   state.selectedPet = null;
   state.walkSeed = 0;
@@ -587,16 +597,18 @@ function applyTick() {
     state.sleep += 1;
   }
 
-  if (state.tickCounter % 3 === 0) {
+  if (state.pendingPoop > 0 && state.poop < 4) {
+    state.pendingPoop = Math.max(0, state.pendingPoop - 1);
     state.poop += 1;
   }
 
   if (!state.bgTickCounter) state.bgTickCounter = 0;
   state.bgTickCounter += 1;
 
-  if (state.bgTickCounter >= 3) {
+  if (state.bgTickCounter >= state.nextBgChangeInTicks) {
     state.bgTickCounter = 0;
-    state.bgIndex = (state.bgIndex + 1) % 5;
+    state.bgIndex = (state.bgIndex + 1) % BG_VARIANTS;
+    state.nextBgChangeInTicks = randomBgTickInterval();
   }
 
   if (state.happyTicksRemaining > 0) {
@@ -676,6 +688,7 @@ function init() {
       () => {
         state.hunger = Math.max(0, state.hunger - 1);
         state.bored = Math.min(4, state.bored + 0);
+        state.pendingPoop += 1;
       },
       { poseOverride: "happy", poseOverrideDurationMs: HAPPY_POSE_MS },
     );
@@ -747,6 +760,8 @@ function init() {
     state.poseOverrideTicks = 0;
     state.poseOverrideUntilMs = 0;
     state.walkSeed = 0;
+    state.nextBgChangeInTicks = randomBgTickInterval();
+    state.pendingPoop = 0;
     state.petX = null;
     state.petY = null;
     refreshMovementSeed();

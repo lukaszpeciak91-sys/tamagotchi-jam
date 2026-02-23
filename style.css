@@ -123,10 +123,10 @@ body {
 
 .bg-1 {
   background:
-    radial-gradient(circle at 78% 18%, rgba(255, 145, 71, 0.95) 0 12px, rgba(255, 211, 79, 0.98) 13px 25px, transparent 26px),
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.45) 0 10px, transparent 11px),
-    repeating-radial-gradient(circle at 60% 85%, rgba(255, 242, 153, 0.25) 0 5px, rgba(255, 214, 91, 0.2) 5px 10px, transparent 10px 16px),
-    linear-gradient(180deg, #9edfff 0 52%, #4ec7e0 52% 72%, #f7d978 72% 100%);
+    radial-gradient(circle at 78% 18%, rgba(255, 191, 68, 1) 0 12px, rgba(255, 231, 126, 1) 13px 25px, transparent 26px),
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.55) 0 10px, transparent 11px),
+    repeating-radial-gradient(circle at 60% 85%, rgba(255, 250, 175, 0.3) 0 5px, rgba(255, 225, 112, 0.22) 5px 10px, transparent 10px 16px),
+    linear-gradient(180deg, #b8ebff 0 52%, #78d9f1 52% 72%, #ffe28f 72% 100%);
 }
 
 .bg-2 {
@@ -137,21 +137,30 @@ body {
 
 .bg-3 {
   background:
-    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.95) 0 1.2px, transparent 1.8px) 0 0/26px 26px,
-    radial-gradient(circle at 80% 70%, rgba(255, 245, 212, 0.85) 0 1px, transparent 1.6px) 13px 8px/28px 28px,
-    radial-gradient(90px 60px at 22% 76%, rgba(195, 132, 255, 0.32), transparent 72%),
-    radial-gradient(120px 80px at 78% 24%, rgba(95, 177, 255, 0.28), transparent 74%),
-    linear-gradient(180deg, #1f2558 0%, #141739 55%, #0c0f22 100%);
+    radial-gradient(circle at 20% 25%, rgba(255, 255, 255, 0.98) 0 1.3px, transparent 1.9px) 0 0/24px 24px,
+    radial-gradient(circle at 80% 70%, rgba(255, 246, 216, 0.92) 0 1.1px, transparent 1.7px) 12px 8px/26px 26px,
+    radial-gradient(100px 66px at 22% 76%, rgba(209, 162, 255, 0.42), transparent 72%),
+    radial-gradient(130px 86px at 78% 24%, rgba(128, 198, 255, 0.4), transparent 74%),
+    linear-gradient(180deg, #46509a 0%, #2f3878 55%, #1c2556 100%);
 }
 
 .bg-4 {
   background:
-    repeating-linear-gradient(90deg, rgba(140, 154, 180, 0.23) 0 2px, transparent 2px 28px),
-    repeating-linear-gradient(0deg, rgba(172, 180, 192, 0.2) 0 1px, transparent 1px 24px),
-    radial-gradient(circle at 20% 22%, rgba(255, 238, 177, 0.75) 0 7px, transparent 8px),
-    radial-gradient(circle at 78% 35%, rgba(255, 214, 157, 0.68) 0 7px, transparent 8px),
-    radial-gradient(circle at 52% 65%, rgba(255, 233, 165, 0.64) 0 6px, transparent 7px),
-    linear-gradient(180deg, #f6f7fb 0%, #e9edf6 52%, #dfe5f1 100%);
+    repeating-linear-gradient(90deg, rgba(128, 146, 176, 0.28) 0 2px, transparent 2px 24px),
+    repeating-linear-gradient(0deg, rgba(159, 171, 188, 0.26) 0 1px, transparent 1px 20px),
+    radial-gradient(circle at 20% 22%, rgba(255, 243, 187, 0.86) 0 7px, transparent 8px),
+    radial-gradient(circle at 78% 35%, rgba(255, 224, 169, 0.78) 0 7px, transparent 8px),
+    radial-gradient(circle at 52% 65%, rgba(255, 239, 181, 0.76) 0 6px, transparent 7px),
+    linear-gradient(180deg, #ffffff 0%, #f2f6ff 52%, #eaf0fa 100%);
+}
+
+.bg-5 {
+  background:
+    radial-gradient(circle at 50% 85%, rgba(255, 255, 255, 0.9) 0 2px, transparent 3px),
+    linear-gradient(90deg, transparent 49%, rgba(255, 255, 255, 0.9) 49% 51%, transparent 51%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.65)) center 26%/66% 2px no-repeat,
+    repeating-linear-gradient(180deg, #6dd55d 0 16px, #60c952 16px 32px),
+    linear-gradient(180deg, #7ce26f 0%, #5ccc52 100%);
 }
 
 .pet-floor {
