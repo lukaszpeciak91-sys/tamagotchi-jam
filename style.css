@@ -226,12 +226,18 @@ body {
   transform: scaleX(-1);
 }
 
+
+.pet-mover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  will-change: transform;
+}
+
 .pet {
   position: relative;
   z-index: 2;
-  justify-self: center;
-  align-self: end;
-  margin-bottom: 20%;
   width: min(55vw, 220px);
   aspect-ratio: 1 / 1;
   image-rendering: pixelated;
