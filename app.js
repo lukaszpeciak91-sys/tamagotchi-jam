@@ -338,14 +338,20 @@ function render() {
   const petConfig = PETS[getActivePetId()] ?? PETS[DEFAULT_PET];
   const frame = petConfig.map[renderMode] ?? petConfig.map.idle ?? { col: 0, row: 0 };
 
+  petElement.className = `pet pet--${renderMode}`;
+  petElement.hidden = !isPetPhase;
+
+  const frameWidth = isPetPhase ? petElement.offsetWidth : 0;
+  const frameHeight = isPetPhase ? petElement.offsetHeight : 0;
+
   petElement.style.setProperty("--pet-col", frame.col);
   petElement.style.setProperty("--pet-row", frame.row);
   petElement.style.setProperty("--pet-cols", petConfig.cols);
   petElement.style.setProperty("--pet-rows", petConfig.rows);
+  petElement.style.setProperty("--pet-frame-w", `${frameWidth}px`);
+  petElement.style.setProperty("--pet-frame-h", `${frameHeight}px`);
   petElement.style.backgroundImage = `url("${petConfig.sheet}")`;
 
-  petElement.className = `pet pet--${renderMode}`;
-  petElement.hidden = !isPetPhase;
   eggElement.hidden = !isEggPhase;
   selectElement.hidden = !isSelectPhase;
   eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
