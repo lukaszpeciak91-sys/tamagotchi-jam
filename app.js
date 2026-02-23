@@ -1,6 +1,7 @@
 const STORAGE_KEY = "tamagotchi-jam-state-v1";
 const TICK_MS = 15000;
 const MAX_CATCHUP_TICKS = 8;
+const MAX_POOP_DOTS = 4;
 const BG_VARIANTS = 6;
 const HAPPY_POSE_MS = 2000;
 const SLEEP_POSE_MS = 3000;
@@ -171,7 +172,7 @@ function randomBgTickInterval() {
 
 const state = loadState();
 function clampStat(value) {
-  return Math.max(0, Math.min(4, Number(value) || 0));
+  return Math.max(0, Math.min(MAX_POOP_DOTS, Number(value) || 0));
 }
 
 function clampState(source = state) {
@@ -481,30 +482,19 @@ function derivePetMode(source) {
 
 function renderPoop() {
   const poopLayer = document.getElementById("poopLayer");
-  let blobsCount = 0;
-
-  if (state.poop >= 3) {
-    blobsCount = 2;
-  } else if (state.poop >= 1) {
-    blobsCount = 1;
-  }
+  const blobsCount = Math.max(0, Math.min(MAX_POOP_DOTS, Math.floor(Number(state.poop) || 0)));
 
   if (blobsCount === 0) {
     poopLayer.innerHTML = "";
     return;
   }
 
-  if (blobsCount === 1) {
-    poopLayer.innerHTML = '<div class="poop poop--ui poop--1"></div>';
-    return;
-  }
-
-  poopLayer.innerHTML =
-    '<div class="poop poop--ui poop--1"></div><div class="poop poop--ui poop--2"></div>';
+  poopLayer.innerHTML = Array.from({ length: blobsCount }, (_, index) =>
+    `<div class="poop poop--ui" style="--poop-index:${index}; --poop-count:${blobsCount};"></div>`).join("");
 }
 
 function renderDots(targetId, value) {
-  const dots = Array.from({ length: 4 }, (_, index) => {
+  const dots = Array.from({ length: MAX_POOP_DOTS }, (_, index) => {
     const onClass = index < value ? "dot on" : "dot";
     return `<span class="${onClass}" aria-hidden="true"></span>`;
   }).join("");
