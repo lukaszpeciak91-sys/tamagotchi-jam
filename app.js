@@ -320,6 +320,10 @@ function renderDots(targetId, value) {
 function render() {
   clampState();
 
+  const isSelectPhase = state.phase === "select";
+  const isEggPhase = state.phase === "egg";
+  const isPetPhase = state.phase === "pet" || state.phase === "dead";
+
   renderDots("hungerDots", state.hunger);
   renderDots("sleepDots", state.sleep);
   renderDots("poopDots", state.poop);
@@ -341,9 +345,9 @@ function render() {
   petElement.style.backgroundImage = `url("${petConfig.sheet}")`;
 
   petElement.className = `pet pet--${renderMode}`;
-  petElement.hidden = state.phase !== "pet" && state.phase !== "dead";
-  eggElement.hidden = state.phase !== "egg";
-  selectElement.hidden = state.phase !== "select";
+  petElement.hidden = !isPetPhase;
+  eggElement.hidden = !isEggPhase;
+  selectElement.hidden = !isSelectPhase;
   eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
 
   const screenElement = document.getElementById("screen");
@@ -516,14 +520,16 @@ function init() {
   });
 
   document.getElementById("petSelect").addEventListener("click", (event) => {
+    event.stopPropagation();
+
     const button = event.target.closest("[data-pet-option]");
     if (!button) return;
 
-    const selectedPet = button.getAttribute("data-pet-option");
-    if (!PETS[selectedPet]) return;
+    const petId = button.getAttribute("data-pet-option");
+    if (!PETS[petId]) return;
 
     // Selection is one-time for this life and transitions into egg.
-    state.selectedPet = selectedPet;
+    state.selectedPet = petId;
     state.phase = "egg";
     state.eggTaps = 0;
     state.life = "alive";
