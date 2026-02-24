@@ -299,6 +299,18 @@ function getBackgroundDebugLabel(index) {
   return bgMeta ? `${bgMeta.id}:${bgMeta.name}` : `${index}`;
 }
 
+function getUiThemeToken(backgroundMeta) {
+  if (backgroundMeta && typeof backgroundMeta.theme === "string" && backgroundMeta.theme.trim().length > 0) {
+    return backgroundMeta.theme.trim();
+  }
+  return "neutral";
+}
+
+function applyUiTheme(themeId) {
+  const appElement = document.querySelector(".app") || document.documentElement;
+  appElement.dataset.uiTheme = themeId || "neutral";
+}
+
 function setScreenBackgroundFromManifest(screenElement, index) {
   const manifestBackground = getBackgroundMeta(index);
   if (!manifestBackground) return;
@@ -745,6 +757,9 @@ function render() {
   const effectiveBgIndex = getEffectiveBackgroundIndex();
 
   const manifestBackground = getBackgroundMeta(effectiveBgIndex);
+  const uiThemeToken = getUiThemeToken(manifestBackground);
+  applyUiTheme(uiThemeToken);
+
   if (manifestBackground) {
     if (backgroundSwap.appliedIndex === null) {
       setScreenBackgroundFromManifest(screenElement, effectiveBgIndex);
@@ -783,7 +798,7 @@ function render() {
     const pendingBgLabel = backgroundSwap.pendingIndex === null
       ? "none"
       : getBackgroundDebugLabel(backgroundSwap.pendingIndex);
-    const debugBg = `bgCurrent:${getBackgroundDebugLabel(currentBgIndex)} bgPending:${pendingBgLabel}`;
+    const debugBg = `bgCurrent:${getBackgroundDebugLabel(currentBgIndex)} bgPending:${pendingBgLabel} theme:${uiThemeToken}`;
     document.getElementById("debugLine").textContent =
       `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter} ${debugBg} pos:(${movement.x.toFixed(1)},${movement.y.toFixed(1)}) target:(${movement.targetX.toFixed(1)},${movement.targetY.toFixed(1)}) nextMoveInMs:${nextMoveInMs} speed:${movement.speedPxPerS.toFixed(1)}`;
   }
