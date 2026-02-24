@@ -9,21 +9,23 @@
   --dot-off: #c9b89f;
   --poop-icon: none;
 
-  /* UI shell + controls theme (Classic Beige 90s) */
-  --shell-bg: linear-gradient(180deg, #f3e7d4 0%, #d7c6aa 100%);
-  --shell-border: #8b775e;
-  --shell-shadow:
+  /* UI shell + controls theme */
+  --ui-shell-bg: linear-gradient(180deg, #f3e7d4 0%, #d7c6aa 100%);
+  --ui-shell-border: #8b775e;
+  --ui-shadow:
     0 10px 20px rgba(49, 38, 24, 0.22),
     inset 0 1px 0 rgba(255, 255, 255, 0.35);
   --btn-bg: linear-gradient(180deg, #f5ead8 0%, #e0d0b7 100%);
   --btn-border: #7b654c;
+  --btn-text: #332b22;
   --btn-shadow:
     0 2px 0 rgba(99, 76, 51, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.38),
     inset 0 -2px 0 rgba(121, 95, 65, 0.2);
   --chip-bg: linear-gradient(180deg, #f7ecd9 0%, #eadac0 100%);
   --chip-border: #7c684f;
-  --ui-accent: #5f8f84;
+  --chip-dot-off: #c9b89f;
+  --chip-dot-on: color-mix(in srgb, #5f8f84 65%, #332b22 35%);
 
   /* Theme preset: Smoke Gray */
   /*
@@ -94,10 +96,10 @@ body {
   min-height: calc(100dvh - var(--shell-pad-top) - var(--shell-pad-bottom));
   display: flex;
   flex-direction: column;
-  background: var(--shell-bg);
-  border: 3px solid var(--shell-border);
+  background: var(--ui-shell-bg);
+  border: 3px solid var(--ui-shell-border);
   border-radius: 20px;
-  box-shadow: var(--shell-shadow);
+  box-shadow: var(--ui-shadow);
   padding: 8px;
   gap: 6px;
 }
@@ -141,11 +143,11 @@ body {
   height: 8px;
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--chip-border) 85%, #000 15%);
-  background: var(--dot-off);
+  background: var(--chip-dot-off);
 }
 
 .dot.on {
-  background: color-mix(in srgb, var(--ui-accent) 65%, var(--ink) 35%);
+  background: var(--chip-dot-on);
 }
 
 .pet-screen {
@@ -571,7 +573,7 @@ body {
   border-radius: 10px;
   background: var(--btn-bg);
   box-shadow: var(--btn-shadow);
-  color: var(--ink);
+  color: var(--btn-text);
   min-height: 44px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -601,14 +603,6 @@ body {
   margin-top: 0;
 }
 
-.reset-link {
-  border: 1px solid #7a664f;
-  border-radius: 8px;
-  background: var(--panel-2);
-  color: var(--ink-soft);
-  font-size: 0.78rem;
-  padding: 5px 8px;
-}
 
 .debug {
   margin: 0;
@@ -623,6 +617,133 @@ body {
 .debug p {
   margin: 0.25rem 0 0;
 }
+
+.debug-controls {
+  display: inline-flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.debug-controls button,
+.reset-link {
+  border: 2px solid var(--btn-border);
+  border-radius: 8px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  box-shadow: var(--btn-shadow);
+}
+
+.debug-controls button:active,
+.reset-link:active {
+  transform: translateY(1px);
+}
+
+.app[data-ui-theme="neutral"] {
+  --ui-shell-bg: linear-gradient(180deg, #f3e7d4 0%, #d7c6aa 100%);
+  --ui-shell-border: #8b775e;
+  --ui-shadow: 0 10px 20px rgba(49, 38, 24, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --btn-bg: linear-gradient(180deg, #f5ead8 0%, #e0d0b7 100%);
+  --btn-border: #7b654c;
+  --btn-text: #332b22;
+  --chip-bg: linear-gradient(180deg, #f7ecd9 0%, #eadac0 100%);
+  --chip-border: #7c684f;
+  --chip-dot-off: #c9b89f;
+  --chip-dot-on: #5f8f84;
+}
+
+.app[data-ui-theme="beach"] {
+  --ui-shell-bg: linear-gradient(180deg, #eef9ff 0%, #cfe7f6 100%);
+  --ui-shell-border: #5c8098;
+  --ui-shadow: 0 10px 20px rgba(29, 62, 86, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  --btn-bg: linear-gradient(180deg, #fff4d4 0%, #ffe0a9 100%);
+  --btn-border: #8e7150;
+  --btn-text: #2f2a23;
+  --chip-bg: linear-gradient(180deg, #f4fbff 0%, #deeff9 100%);
+  --chip-border: #64889f;
+  --chip-dot-off: #bed1de;
+  --chip-dot-on: #2f7e90;
+}
+
+.app[data-ui-theme="kids"] {
+  --ui-shell-bg: linear-gradient(180deg, #ffe9f4 0%, #ffd2e7 100%);
+  --ui-shell-border: #9c6f92;
+  --ui-shadow: 0 10px 20px rgba(104, 66, 104, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --btn-bg: linear-gradient(180deg, #fff7d8 0%, #ffe7b8 100%);
+  --btn-border: #8f7478;
+  --btn-text: #352c2d;
+  --chip-bg: linear-gradient(180deg, #f7f4ff 0%, #e8e3fb 100%);
+  --chip-border: #8a7ea2;
+  --chip-dot-off: #cfc8e3;
+  --chip-dot-on: #d35ca9;
+}
+
+.app[data-ui-theme="space"] {
+  --ui-shell-bg: linear-gradient(180deg, #d8dbef 0%, #afb6dc 100%);
+  --ui-shell-border: #4c5585;
+  --ui-shadow: 0 12px 24px rgba(23, 29, 58, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  --btn-bg: linear-gradient(180deg, #edf0ff 0%, #d1d7f6 100%);
+  --btn-border: #50588a;
+  --btn-text: #1f2440;
+  --chip-bg: linear-gradient(180deg, #eff2ff 0%, #d8def9 100%);
+  --chip-border: #596093;
+  --chip-dot-off: #b7bfe3;
+  --chip-dot-on: #4f63d7;
+}
+
+.app[data-ui-theme="office"] {
+  --ui-shell-bg: linear-gradient(180deg, #e8ebef 0%, #c9d0d8 100%);
+  --ui-shell-border: #606a75;
+  --ui-shadow: 0 12px 24px rgba(22, 29, 38, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --btn-bg: linear-gradient(180deg, #f4f7fa 0%, #d9e0e7 100%);
+  --btn-border: #5d6671;
+  --btn-text: #222a31;
+  --chip-bg: linear-gradient(180deg, #f5f8fb 0%, #dce3ea 100%);
+  --chip-border: #5f6872;
+  --chip-dot-off: #b9c3ce;
+  --chip-dot-on: #4d7ba9;
+}
+
+.app[data-ui-theme="warehouse"] {
+  --ui-shell-bg: linear-gradient(180deg, #e4ddd3 0%, #c8bdaf 100%);
+  --ui-shell-border: #66584a;
+  --ui-shadow: 0 10px 20px rgba(44, 34, 26, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  --btn-bg: linear-gradient(180deg, #efe7dc 0%, #d6c8b6 100%);
+  --btn-border: #6a5a4b;
+  --btn-text: #2d251e;
+  --chip-bg: linear-gradient(180deg, #f1e9df 0%, #dfd2c2 100%);
+  --chip-border: #6f604f;
+  --chip-dot-off: #c1b2a1;
+  --chip-dot-on: #8b7256;
+}
+
+.app[data-ui-theme="hell"] {
+  --ui-shell-bg: linear-gradient(180deg, #f2d2c7 0%, #cf8b7f 100%);
+  --ui-shell-border: #7f3d33;
+  --ui-shadow: 0 12px 24px rgba(70, 18, 13, 0.32), inset 0 1px 0 rgba(255, 230, 225, 0.3);
+  --btn-bg: linear-gradient(180deg, #f8ddd0 0%, #eab19f 100%);
+  --btn-border: #87463a;
+  --btn-text: #341611;
+  --chip-bg: linear-gradient(180deg, #fbe7dd 0%, #efc4b6 100%);
+  --chip-border: #8d4f43;
+  --chip-dot-off: #d7a79a;
+  --chip-dot-on: #b63f30;
+}
+
+.app[data-ui-theme="dream"] {
+  --ui-shell-bg: linear-gradient(180deg, #eadfff 0%, #d0c2f3 100%);
+  --ui-shell-border: #6f5d99;
+  --ui-shadow: 0 12px 24px rgba(47, 35, 76, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  --btn-bg: linear-gradient(180deg, #f2ebff 0%, #d9cdf4 100%);
+  --btn-border: #735ea2;
+  --btn-text: #2a2140;
+  --chip-bg: linear-gradient(180deg, #f3eeff 0%, #e0d6fb 100%);
+  --chip-border: #7a67a8;
+  --chip-dot-off: #bfb1e2;
+  --chip-dot-on: #7653c5;
+}
+
 
 .pet--idle {
   animation: pet-idle 2.4s ease-in-out infinite;
