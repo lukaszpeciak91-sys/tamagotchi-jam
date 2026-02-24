@@ -730,3 +730,11 @@ body {
     padding-left: 1rem;
   }
 }
+
+/* --- Legacy pet floor visual disabled (kept for layout safety) --- */
+.pet-floor {
+  background: transparent !important;
+  opacity: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
