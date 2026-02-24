@@ -141,6 +141,11 @@ const PET_OPTIONS = [
 
 const sheetLoadState = {};
 let backgroundManifest = null;
+const backgroundSwap = {
+  appliedIndex: null,
+  pendingIndex: null,
+  requestToken: 0,
+};
 
 const defaultState = {
   phase: "select",
@@ -187,6 +192,62 @@ function getBackgroundMeta(index = state.bgIndex) {
   if (!backgroundManifest?.length) return null;
   const safeIndex = clampBgIndex(index, backgroundManifest.length);
   return backgroundManifest[safeIndex] ?? null;
+}
+
+function getGameplayBackgroundRange(count = getBackgroundCount()) {
+  if (count <= 1) return { min: 0, max: 0 };
+  return { min: 1, max: count - 1 };
+}
+
+function normalizeGameplayBackgroundIndex(index, count = getBackgroundCount()) {
+  const { min, max } = getGameplayBackgroundRange(count);
+  const numeric = Number.isFinite(index) ? Math.floor(index) : min;
+  return Math.max(min, Math.min(max, numeric));
+}
+
+function getEffectiveBackgroundIndex() {
+  if (state.phase === "select") return 0;
+  if (getBackgroundCount() <= 1) return 0;
+  return normalizeGameplayBackgroundIndex(state.bgIndex);
+}
+
+function getBackgroundDebugLabel(index) {
+  const bgMeta = getBackgroundMeta(index);
+  return bgMeta ? `${bgMeta.id}:${bgMeta.name}` : `${index}`;
+}
+
+function setScreenBackgroundFromManifest(screenElement, index) {
+  const manifestBackground = getBackgroundMeta(index);
+  if (!manifestBackground) return;
+
+  screenElement.style.backgroundRepeat = "no-repeat";
+  screenElement.style.backgroundPosition = "center center";
+  screenElement.style.backgroundSize = "cover";
+  screenElement.style.backgroundImage = `url("${manifestBackground.file}")`;
+  backgroundSwap.appliedIndex = index;
+}
+
+function requestBackgroundSwap(screenElement, targetIndex) {
+  if (backgroundSwap.appliedIndex === targetIndex || backgroundSwap.pendingIndex === targetIndex) return;
+
+  const manifestBackground = getBackgroundMeta(targetIndex);
+  if (!manifestBackground) return;
+
+  backgroundSwap.pendingIndex = targetIndex;
+  const token = backgroundSwap.requestToken + 1;
+  backgroundSwap.requestToken = token;
+
+  const preloadImage = new Image();
+  preloadImage.onload = () => {
+    if (token !== backgroundSwap.requestToken) return;
+    setScreenBackgroundFromManifest(screenElement, targetIndex);
+    backgroundSwap.pendingIndex = null;
+  };
+  preloadImage.onerror = () => {
+    if (token !== backgroundSwap.requestToken) return;
+    backgroundSwap.pendingIndex = null;
+  };
+  preloadImage.src = manifestBackground.file;
 }
 
 async function loadBackgroundManifest() {
@@ -248,6 +309,11 @@ function clampState(source = state) {
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
   source.bgIndex = clampBgIndex(Number(source.bgIndex) || 0);
+  if (source.phase === "select") {
+    source.bgIndex = 0;
+  } else if (getBackgroundCount() > 1) {
+    source.bgIndex = normalizeGameplayBackgroundIndex(source.bgIndex);
+  }
   source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
   source.nextBgChangeInTicks = Math.max(2, Math.min(3, Math.floor(Number(source.nextBgChangeInTicks) || 2)));
   source.pendingPoop = Math.max(0, Math.floor(Number(source.pendingPoop) || 0));
@@ -593,14 +659,15 @@ function render() {
   eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
 
   const screenElement = document.getElementById("screen");
-  // Use cover so each scene fills the viewport consistently without letterboxing on small screens.
-  screenElement.style.backgroundRepeat = "no-repeat";
-  screenElement.style.backgroundPosition = "center center";
-  screenElement.style.backgroundSize = "cover";
+  const effectiveBgIndex = getEffectiveBackgroundIndex();
 
-  const manifestBackground = getBackgroundMeta();
+  const manifestBackground = getBackgroundMeta(effectiveBgIndex);
   if (manifestBackground) {
-    screenElement.style.backgroundImage = `url("${manifestBackground.file}")`;
+    if (backgroundSwap.appliedIndex === null) {
+      setScreenBackgroundFromManifest(screenElement, effectiveBgIndex);
+    } else {
+      requestBackgroundSwap(screenElement, effectiveBgIndex);
+    }
   } else {
     const bgClassPrefix = "bg-";
     Array.from(screenElement.classList)
@@ -608,7 +675,7 @@ function render() {
       .forEach((className) => {
         screenElement.classList.remove(className);
       });
-    screenElement.classList.add(`${bgClassPrefix}${state.bgIndex}`);
+    screenElement.classList.add(`${bgClassPrefix}${effectiveBgIndex}`);
     screenElement.style.removeProperty("background-image");
     screenElement.style.removeProperty("background-repeat");
     screenElement.style.removeProperty("background-position");
@@ -629,10 +696,11 @@ function render() {
   const debugRoot = document.querySelector(".debug");
   if (debugRoot?.open) {
     const nextMoveInMs = Math.max(0, Math.round(movement.nextTargetAtMs - performance.now()));
-    const bgMeta = getBackgroundMeta();
-    const debugBg = bgMeta
-      ? `bg:${bgMeta.id}:${bgMeta.name}`
-      : `bg:${state.bgIndex}`;
+    const currentBgIndex = backgroundSwap.appliedIndex ?? effectiveBgIndex;
+    const pendingBgLabel = backgroundSwap.pendingIndex === null
+      ? "none"
+      : getBackgroundDebugLabel(backgroundSwap.pendingIndex);
+    const debugBg = `bgCurrent:${getBackgroundDebugLabel(currentBgIndex)} bgPending:${pendingBgLabel}`;
     document.getElementById("debugLine").textContent =
       `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter} ${debugBg} pos:(${movement.x.toFixed(1)},${movement.y.toFixed(1)}) target:(${movement.targetX.toFixed(1)},${movement.targetY.toFixed(1)}) nextMoveInMs:${nextMoveInMs} speed:${movement.speedPxPerS.toFixed(1)}`;
   }
@@ -664,7 +732,14 @@ function applyTick() {
 
   if (state.bgTickCounter >= state.nextBgChangeInTicks) {
     state.bgTickCounter = 0;
-    state.bgIndex = (state.bgIndex + 1) % getBackgroundCount();
+    const bgCount = getBackgroundCount();
+    if (bgCount > 1) {
+      const { min, max } = getGameplayBackgroundRange(bgCount);
+      const current = normalizeGameplayBackgroundIndex(state.bgIndex, bgCount);
+      state.bgIndex = current >= max ? min : current + 1;
+    } else {
+      state.bgIndex = 0;
+    }
     state.nextBgChangeInTicks = randomBgTickInterval();
   }
 
@@ -723,7 +798,17 @@ function checkTick() {
 
 function cycleBackground(step) {
   const bgCount = getBackgroundCount();
-  state.bgIndex = (state.bgIndex + step + bgCount) % bgCount;
+  if (state.phase === "select") {
+    state.bgIndex = 0;
+  } else if (bgCount > 1) {
+    const { min, max } = getGameplayBackgroundRange(bgCount);
+    const range = max - min + 1;
+    const current = normalizeGameplayBackgroundIndex(state.bgIndex, bgCount);
+    const offset = (current - min + step) % range;
+    state.bgIndex = min + ((offset + range) % range);
+  } else {
+    state.bgIndex = 0;
+  }
   state.bgTickCounter = 0;
   state.nextBgChangeInTicks = randomBgTickInterval();
   clampState();
@@ -840,6 +925,7 @@ function init() {
       state.walkSeed = 0;
     }
     state.nextBgChangeInTicks = randomBgTickInterval();
+    state.bgIndex = getBackgroundCount() > 1 ? 1 : 0;
     state.pendingPoop = 0;
     state.petX = null;
     state.petY = null;
