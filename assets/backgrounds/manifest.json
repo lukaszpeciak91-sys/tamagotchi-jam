@@ -1,0 +1,23 @@
+[
+  { "id": 1, "name": "Child Room 90s", "file": "assets/backgrounds/01.png" },
+  { "id": 2, "name": "Tropical Beach", "file": "assets/backgrounds/02.png" },
+  { "id": 3, "name": "Winter", "file": "assets/backgrounds/03.png" },
+  { "id": 4, "name": "Space", "file": "assets/backgrounds/04.png" },
+  { "id": 5, "name": "Open Space Office", "file": "assets/backgrounds/05.png" },
+  { "id": 6, "name": "Soccer Field", "file": "assets/backgrounds/06.png" },
+  { "id": 7, "name": "Rainy Window", "file": "assets/backgrounds/07.png" },
+  { "id": 8, "name": "Sunset Park", "file": "assets/backgrounds/08.png" },
+  { "id": 9, "name": "City Night", "file": "assets/backgrounds/09.png" },
+  { "id": 10, "name": "Neon Grid", "file": "assets/backgrounds/10.png" },
+  { "id": 11, "name": "Spring Meadow", "file": "assets/backgrounds/11.png" },
+  { "id": 12, "name": "Bamboo Forest", "file": "assets/backgrounds/12.png" },
+  { "id": 13, "name": "Cloud Kingdom", "file": "assets/backgrounds/13.png" },
+  { "id": 14, "name": "Crystal Cave", "file": "assets/backgrounds/14.png" },
+  { "id": 15, "name": "Coral Reef", "file": "assets/backgrounds/15.png" },
+  { "id": 16, "name": "Candy Land", "file": "assets/backgrounds/16.png" },
+  { "id": 17, "name": "Haunted Garden", "file": "assets/backgrounds/17.png" },
+  { "id": 18, "name": "Lava Ridge", "file": "assets/backgrounds/18.png" },
+  { "id": 19, "name": "Aurora Tundra", "file": "assets/backgrounds/19.png" },
+  { "id": 20, "name": "Sky Ruins", "file": "assets/backgrounds/20.png" },
+  { "id": 21, "name": "Dream Realm", "file": "assets/backgrounds/21.png" }
+]

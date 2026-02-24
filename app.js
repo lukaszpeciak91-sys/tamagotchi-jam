@@ -3,6 +3,7 @@ const TICK_MS = 15000;
 const MAX_CATCHUP_TICKS = 8;
 const MAX_POOP_DOTS = 4;
 const BG_VARIANTS = 11;
+const BACKGROUND_MANIFEST_URL = "assets/backgrounds/manifest.json";
 const HAPPY_POSE_MS = 2000;
 const SLEEP_POSE_MS = 3000;
 const MOVE_INTERVAL_MIN_MS = 2000;
@@ -139,6 +140,7 @@ const PET_OPTIONS = [
 ];
 
 const sheetLoadState = {};
+let backgroundManifest = null;
 
 const defaultState = {
   phase: "select",
@@ -170,6 +172,53 @@ function randomBgTickInterval() {
   return 2 + Math.floor(Math.random() * 2);
 }
 
+function getBackgroundCount() {
+  return backgroundManifest?.length || BG_VARIANTS;
+}
+
+function clampBgIndex(index, count = getBackgroundCount()) {
+  if (!Number.isFinite(index)) return 0;
+  if (count <= 0) return 0;
+  const normalized = Math.floor(index);
+  return Math.max(0, Math.min(count - 1, normalized));
+}
+
+function getBackgroundMeta(index = state.bgIndex) {
+  if (!backgroundManifest?.length) return null;
+  const safeIndex = clampBgIndex(index, backgroundManifest.length);
+  return backgroundManifest[safeIndex] ?? null;
+}
+
+async function loadBackgroundManifest() {
+  try {
+    const response = await fetch(BACKGROUND_MANIFEST_URL);
+    if (!response.ok) throw new Error(`background manifest HTTP ${response.status}`);
+
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error("background manifest is empty or invalid");
+    }
+
+    const parsed = data.filter((entry) => {
+      return entry
+        && Number.isInteger(entry.id)
+        && typeof entry.name === "string"
+        && typeof entry.file === "string"
+        && entry.file.length > 0;
+    });
+
+    if (parsed.length === 0) throw new Error("background manifest contains no valid entries");
+
+    backgroundManifest = parsed;
+    clampState();
+    saveState();
+    render();
+  } catch (error) {
+    backgroundManifest = null;
+    console.warn("Failed to load background manifest, using CSS fallback backgrounds.", error);
+  }
+}
+
 const state = loadState();
 function clampStat(value) {
   return Math.max(0, Math.min(MAX_POOP_DOTS, Number(value) || 0));
@@ -198,7 +247,7 @@ function clampState(source = state) {
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
-  source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % BG_VARIANTS;
+  source.bgIndex = clampBgIndex(Number(source.bgIndex) || 0);
   source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
   source.nextBgChangeInTicks = Math.max(2, Math.min(3, Math.floor(Number(source.nextBgChangeInTicks) || 2)));
   source.pendingPoop = Math.max(0, Math.floor(Number(source.pendingPoop) || 0));
@@ -544,13 +593,27 @@ function render() {
   eggElement.className = `egg crack-${Math.floor(state.eggTaps / 2)}`;
 
   const screenElement = document.getElementById("screen");
-  const bgClassPrefix = "bg-";
-  Array.from(screenElement.classList)
-    .filter((className) => className.startsWith(bgClassPrefix))
-    .forEach((className) => {
-      screenElement.classList.remove(className);
-    });
-  screenElement.classList.add(`${bgClassPrefix}${state.bgIndex}`);
+  // Use cover so each scene fills the viewport consistently without letterboxing on small screens.
+  screenElement.style.backgroundRepeat = "no-repeat";
+  screenElement.style.backgroundPosition = "center center";
+  screenElement.style.backgroundSize = "cover";
+
+  const manifestBackground = getBackgroundMeta();
+  if (manifestBackground) {
+    screenElement.style.backgroundImage = `url("${manifestBackground.file}")`;
+  } else {
+    const bgClassPrefix = "bg-";
+    Array.from(screenElement.classList)
+      .filter((className) => className.startsWith(bgClassPrefix))
+      .forEach((className) => {
+        screenElement.classList.remove(className);
+      });
+    screenElement.classList.add(`${bgClassPrefix}${state.bgIndex}`);
+    screenElement.style.removeProperty("background-image");
+    screenElement.style.removeProperty("background-repeat");
+    screenElement.style.removeProperty("background-position");
+    screenElement.style.removeProperty("background-size");
+  }
   screenElement.classList.toggle("screen--dirty", state.poop >= 2);
 
   renderPoop();
@@ -566,8 +629,12 @@ function render() {
   const debugRoot = document.querySelector(".debug");
   if (debugRoot?.open) {
     const nextMoveInMs = Math.max(0, Math.round(movement.nextTargetAtMs - performance.now()));
+    const bgMeta = getBackgroundMeta();
+    const debugBg = bgMeta
+      ? `bg:${bgMeta.id}:${bgMeta.name}`
+      : `bg:${state.bgIndex}`;
     document.getElementById("debugLine").textContent =
-      `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter} pos:(${movement.x.toFixed(1)},${movement.y.toFixed(1)}) target:(${movement.targetX.toFixed(1)},${movement.targetY.toFixed(1)}) nextMoveInMs:${nextMoveInMs} speed:${movement.speedPxPerS.toFixed(1)}`;
+      `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter} ${debugBg} pos:(${movement.x.toFixed(1)},${movement.y.toFixed(1)}) target:(${movement.targetX.toFixed(1)},${movement.targetY.toFixed(1)}) nextMoveInMs:${nextMoveInMs} speed:${movement.speedPxPerS.toFixed(1)}`;
   }
 
   if (isPetPhase) {
@@ -597,7 +664,7 @@ function applyTick() {
 
   if (state.bgTickCounter >= state.nextBgChangeInTicks) {
     state.bgTickCounter = 0;
-    state.bgIndex = (state.bgIndex + 1) % BG_VARIANTS;
+    state.bgIndex = (state.bgIndex + 1) % getBackgroundCount();
     state.nextBgChangeInTicks = randomBgTickInterval();
   }
 
@@ -655,7 +722,8 @@ function checkTick() {
 }
 
 function cycleBackground(step) {
-  state.bgIndex = (state.bgIndex + step + BG_VARIANTS) % BG_VARIANTS;
+  const bgCount = getBackgroundCount();
+  state.bgIndex = (state.bgIndex + step + bgCount) % bgCount;
   state.bgTickCounter = 0;
   state.nextBgChangeInTicks = randomBgTickInterval();
   clampState();
@@ -833,6 +901,7 @@ function init() {
   saveState();
   render();
   initPetMovement();
+  loadBackgroundManifest();
 }
 
 init();
