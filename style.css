@@ -8,6 +8,58 @@
   --accent: #5f8f84;
   --dot-off: #c9b89f;
   --poop-icon: none;
+
+  /* UI shell + controls theme (Classic Beige 90s) */
+  --shell-bg: linear-gradient(180deg, #f3e7d4 0%, #d7c6aa 100%);
+  --shell-border: #8b775e;
+  --shell-shadow:
+    0 10px 20px rgba(49, 38, 24, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --btn-bg: linear-gradient(180deg, #f5ead8 0%, #e0d0b7 100%);
+  --btn-border: #7b654c;
+  --btn-shadow:
+    0 2px 0 rgba(99, 76, 51, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -2px 0 rgba(121, 95, 65, 0.2);
+  --chip-bg: linear-gradient(180deg, #f7ecd9 0%, #eadac0 100%);
+  --chip-border: #7c684f;
+  --ui-accent: #5f8f84;
+
+  /* Theme preset: Smoke Gray */
+  /*
+  --shell-bg: linear-gradient(180deg, #e8ebef 0%, #c9d0d8 100%);
+  --shell-border: #606a75;
+  --shell-shadow:
+    0 12px 24px rgba(22, 29, 38, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --btn-bg: linear-gradient(180deg, #f4f7fa 0%, #d9e0e7 100%);
+  --btn-border: #5d6671;
+  --btn-shadow:
+    0 2px 0 rgba(42, 52, 62, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -2px 0 rgba(84, 95, 106, 0.22);
+  --chip-bg: linear-gradient(180deg, #f5f8fb 0%, #dce3ea 100%);
+  --chip-border: #5f6872;
+  --ui-accent: #4d7ba9;
+  */
+
+  /* Theme preset: Candy Pastel */
+  /*
+  --shell-bg: linear-gradient(180deg, #ffe9f4 0%, #ffd8e9 100%);
+  --shell-border: #9c6f92;
+  --shell-shadow:
+    0 10px 22px rgba(104, 66, 104, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  --btn-bg: linear-gradient(180deg, #fff6d8 0%, #ffe7b8 100%);
+  --btn-border: #92797a;
+  --btn-shadow:
+    0 2px 0 rgba(114, 86, 90, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -2px 0 rgba(143, 113, 116, 0.22);
+  --chip-bg: linear-gradient(180deg, #f6f7ff 0%, #e8e9fb 100%);
+  --chip-border: #8a7ea2;
+  --ui-accent: #e86bb9;
+  */
 }
 
 * {
@@ -42,12 +94,10 @@ body {
   min-height: calc(100dvh - var(--shell-pad-top) - var(--shell-pad-bottom));
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
-  border: 3px solid #8b775e;
+  background: var(--shell-bg);
+  border: 3px solid var(--shell-border);
   border-radius: 20px;
-  box-shadow:
-    0 10px 20px var(--shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: var(--shell-shadow);
   padding: 8px;
   gap: 6px;
 }
@@ -67,11 +117,13 @@ body {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: var(--panel-2);
-  border: 2px solid #7c684f;
+  background: var(--chip-bg);
+  border: 2px solid var(--chip-border);
   border-radius: 10px;
   padding: 6px 4px;
-  box-shadow: inset 0 -2px 0 rgba(83, 63, 41, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -2px 0 rgba(83, 63, 41, 0.16);
 }
 
 .status-icon {
@@ -88,12 +140,12 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  border: 1px solid #7a654d;
+  border: 1px solid color-mix(in srgb, var(--chip-border) 85%, #000 15%);
   background: var(--dot-off);
 }
 
 .dot.on {
-  background: var(--ink);
+  background: color-mix(in srgb, var(--ui-accent) 65%, var(--ink) 35%);
 }
 
 .pet-screen {
@@ -511,16 +563,19 @@ body {
 }
 
 .actions button {
-  border: 2px solid #7b654c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 2px solid var(--btn-border);
   border-radius: 10px;
-  background: linear-gradient(180deg, var(--panel-2), #e4d5be);
-  box-shadow:
-    0 2px 0 rgba(99, 76, 51, 0.35),
-    inset 0 -2px 0 rgba(121, 95, 65, 0.2);
+  background: var(--btn-bg);
+  box-shadow: var(--btn-shadow);
   color: var(--ink);
   min-height: 44px;
   font-weight: 700;
   letter-spacing: 0.03em;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
 }
 
 .actions button:disabled {
@@ -528,8 +583,13 @@ body {
   cursor: not-allowed;
 }
 
-button:active {
+.actions button:active {
   transform: translateY(1px);
+  box-shadow:
+    0 1px 0 rgba(99, 76, 51, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(121, 95, 65, 0.18);
+  filter: saturate(1.03);
 }
 
 .utility-row {
