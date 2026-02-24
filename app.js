@@ -305,7 +305,7 @@ function setScreenBackgroundFromManifest(screenElement, index) {
 
   screenElement.style.backgroundRepeat = "no-repeat";
   screenElement.style.backgroundPosition = "center center";
-  screenElement.style.backgroundSize = "cover";
+  screenElement.style.backgroundSize = "100% 100%";
   screenElement.style.backgroundImage = `url("${manifestBackground.file}")`;
   backgroundSwap.appliedIndex = index;
 }
