@@ -13,6 +13,11 @@ const MOVE_SAFE_MARGIN_PX = 12;
 const MOVE_NORMAL_SPEED_PX_PER_S = 64;
 const MOVE_SLOW_SPEED_PX_PER_S = 34;
 const MOVE_POSE_SPEED_FACTOR = 0.88;
+const ENDING_PULSE_COUNT = 3;
+const ENDING_PULSE_MS = 520;
+const ENDING_DIALOG_MS = 1500;
+const ENDING_FLASH_MS = 200;
+const ENDING_CDN_MS = 5000;
 const PETS = {
   penguin: {
     sheet: "assets/pets/penguin/Penguin_sheet.png",
@@ -141,6 +146,8 @@ const PET_OPTIONS = [
 
 const sheetLoadState = {};
 let backgroundManifest = null;
+let endingInProgress = false;
+
 const backgroundSwap = {
   appliedIndex: null,
   pendingIndex: null,
@@ -172,6 +179,82 @@ const defaultState = {
   petX: null,
   petY: null,
 };
+
+
+function waitMs(durationMs) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
+}
+
+function getEndingOverlayElements() {
+  return {
+    overlay: document.getElementById("endingOverlay"),
+    dialog: document.getElementById("endingDialog"),
+    cdn: document.getElementById("endingCdn"),
+  };
+}
+
+function setEndingOverlayState({
+  visible = false,
+  pulsing = false,
+  white = false,
+  showDialog = false,
+  showCdn = false,
+} = {}) {
+  const { overlay, dialog, cdn } = getEndingOverlayElements();
+  if (!overlay || !dialog || !cdn) return;
+
+  overlay.hidden = !visible;
+  overlay.classList.toggle("is-active", visible);
+  overlay.classList.toggle("is-pulsing", pulsing);
+  overlay.classList.toggle("is-white", white);
+  overlay.setAttribute("aria-hidden", String(!visible));
+
+  dialog.hidden = !showDialog;
+  cdn.hidden = !showCdn;
+}
+
+function isFinalDreamRealmBackground() {
+  const bgCount = getBackgroundCount();
+  if (bgCount <= 1) return false;
+  const { max } = getGameplayBackgroundRange(bgCount);
+  const current = normalizeGameplayBackgroundIndex(state.bgIndex, bgCount);
+  return current >= max;
+}
+
+async function runFinalEvolutionSequence() {
+  try {
+    setEndingOverlayState({ visible: true, pulsing: true });
+    await waitMs(ENDING_PULSE_COUNT * ENDING_PULSE_MS);
+
+    setEndingOverlayState({ visible: true, showDialog: true });
+    await waitMs(ENDING_DIALOG_MS);
+
+    setEndingOverlayState({ visible: true, white: true });
+    await waitMs(ENDING_FLASH_MS);
+
+    setEndingOverlayState({ visible: true, white: true, showCdn: true });
+    await waitMs(ENDING_CDN_MS);
+  } finally {
+    setEndingOverlayState({ visible: false });
+    transitionToSelect();
+    endingInProgress = false;
+    saveState();
+    render();
+  }
+}
+
+function startFinalEvolutionSequence() {
+  if (endingInProgress) return;
+  endingInProgress = true;
+  state.bgTickCounter = 0;
+  state.nextBgChangeInTicks = randomBgTickInterval();
+  state.lastTick = Date.now();
+  saveState();
+  render();
+  runFinalEvolutionSequence();
+}
 
 function randomBgTickInterval() {
   return 2 + Math.floor(Math.random() * 2);
@@ -432,7 +515,7 @@ function isSlowMode() {
 }
 
 function isMovementPaused() {
-  return Boolean(state.poseOverride) || state.life === "dead";
+  return endingInProgress || Boolean(state.poseOverride) || state.life === "dead";
 }
 
 function updateMovementBounds() {
@@ -685,7 +768,7 @@ function render() {
 
   renderPoop();
 
-  const actionDisabled = state.life === "dead" || state.phase === "egg" || state.phase === "select";
+  const actionDisabled = endingInProgress || state.life === "dead" || state.phase === "egg" || state.phase === "select";
   ["feedBtn", "sleepBtn", "cleanBtn", "playBtn"].forEach((id) => {
     document.getElementById(id).disabled = actionDisabled;
   });
@@ -731,6 +814,11 @@ function applyTick() {
   state.bgTickCounter += 1;
 
   if (state.bgTickCounter >= state.nextBgChangeInTicks) {
+    if (state.phase === "pet" && state.life !== "dead" && isFinalDreamRealmBackground() && !endingInProgress) {
+      startFinalEvolutionSequence();
+      return;
+    }
+
     state.bgTickCounter = 0;
     const bgCount = getBackgroundCount();
     if (bgCount > 1) {
@@ -772,6 +860,8 @@ function applyTick() {
 }
 
 function checkTick() {
+  if (endingInProgress) return;
+
   if (applyPoseExpiry(Date.now())) {
     saveState();
     render();
@@ -797,6 +887,8 @@ function checkTick() {
 }
 
 function cycleBackground(step) {
+  if (endingInProgress) return;
+
   const bgCount = getBackgroundCount();
   if (state.phase === "select") {
     state.bgIndex = 0;
@@ -820,6 +912,7 @@ function applyAction(
   mutator,
   { happyTicks = 0, poseOverride = null, poseOverrideDurationMs = 0 } = {},
 ) {
+  if (endingInProgress) return;
   if (state.phase === "egg" || state.phase === "select") return;
   if (state.life === "dead") return;
 
@@ -885,6 +978,7 @@ function init() {
   });
 
   document.getElementById("resetBtn").addEventListener("click", () => {
+    if (endingInProgress) return;
     localStorage.removeItem(STORAGE_KEY);
     transitionToSelect();
     saveState();
@@ -902,6 +996,7 @@ function init() {
   });
 
   document.getElementById("petSelect").addEventListener("click", (event) => {
+    if (endingInProgress) return;
     event.stopPropagation();
 
     const button = event.target.closest("[data-pet-option]");
@@ -937,6 +1032,7 @@ function init() {
   });
 
   document.getElementById("screen").addEventListener("click", () => {
+    if (endingInProgress) return;
     if (state.phase !== "egg") return;
 
     state.eggTaps = Math.min(10, state.eggTaps + 1);
