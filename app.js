@@ -2,7 +2,29 @@ const STORAGE_KEY = "tamagotchi-jam-state-v1";
 const TICK_MS = 15000;
 const MAX_CATCHUP_TICKS = 8;
 const MAX_POOP_DOTS = 4;
-const BG_VARIANTS = 11;
+const BACKGROUNDS = [
+  { id: 1, name: "Plaża tropikalna", file: "assets/backgrounds/01.png" },
+  { id: 2, name: "Pokój dziecięcy", file: "assets/backgrounds/02.png" },
+  { id: 3, name: "Świt przed dojo", file: "assets/backgrounds/03.png" },
+  { id: 4, name: "Góry o zachodzie", file: "assets/backgrounds/04.png" },
+  { id: 5, name: "Rooftop nocny", file: "assets/backgrounds/05.png" },
+  { id: 6, name: "Supermarket 90s", file: "assets/backgrounds/06.png" },
+  { id: 7, name: "Magazyn (industrial)", file: "assets/backgrounds/07.png" },
+  { id: 8, name: "Biuro 90s", file: "assets/backgrounds/08.png" },
+  { id: 9, name: "Ceglana ściana z graffiti", file: "assets/backgrounds/09.png" },
+  { id: 10, name: "Więzienie", file: "assets/backgrounds/10.png" },
+  { id: 11, name: "Cmentarz (Halloween vibe)", file: "assets/backgrounds/11.png" },
+  { id: 12, name: "Piekło", file: "assets/backgrounds/12.png" },
+  { id: 13, name: "Niebo", file: "assets/backgrounds/13.png" },
+  { id: 14, name: "Magical Mushroom Forest", file: "assets/backgrounds/14.png" },
+  { id: 15, name: "Zimowy level (bałwanek)", file: "assets/backgrounds/15.png" },
+  { id: 16, name: "Aleja czerwonych latarni", file: "assets/backgrounds/16.png" },
+  { id: 17, name: "Obskurna toaleta dworcowa", file: "assets/backgrounds/17.png" },
+  { id: 18, name: "Boisko piłkarskie (stadion 90s)", file: "assets/backgrounds/18.png" },
+  { id: 19, name: "Kosmos", file: "assets/backgrounds/19.png" },
+  { id: 20, name: "Sala zamkowa", file: "assets/backgrounds/20.png" },
+  { id: 21, name: "Dream Realm (geometryczny)", file: "assets/backgrounds/21.png" },
+];
 const HAPPY_POSE_MS = 2000;
 const SLEEP_POSE_MS = 3000;
 const MOVE_INTERVAL_MIN_MS = 2000;
@@ -198,7 +220,7 @@ function clampState(source = state) {
   const validModes = new Set(["idle", "happy", "hungry", "sleepy", "dirty", "bored", "dead"]);
   source.poseOverride = validModes.has(source.poseOverride) ? source.poseOverride : null;
   source.poseOverrideTicks = Math.max(0, Number(source.poseOverrideTicks) || 0);
-  source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % BG_VARIANTS;
+  source.bgIndex = Math.max(0, Number(source.bgIndex) || 0) % BACKGROUNDS.length;
   source.bgTickCounter = Math.max(0, Number(source.bgTickCounter) || 0);
   source.nextBgChangeInTicks = Math.max(2, Math.min(3, Math.floor(Number(source.nextBgChangeInTicks) || 2)));
   source.pendingPoop = Math.max(0, Math.floor(Number(source.pendingPoop) || 0));
@@ -545,12 +567,17 @@ function render() {
 
   const screenElement = document.getElementById("screen");
   const bgClassPrefix = "bg-";
+  const activeBackground = BACKGROUNDS[state.bgIndex] ?? BACKGROUNDS[0];
   Array.from(screenElement.classList)
     .filter((className) => className.startsWith(bgClassPrefix))
     .forEach((className) => {
       screenElement.classList.remove(className);
     });
   screenElement.classList.add(`${bgClassPrefix}${state.bgIndex}`);
+  screenElement.style.backgroundImage = activeBackground ? `url("${activeBackground.file}")` : "none";
+  screenElement.style.backgroundSize = "cover";
+  screenElement.style.backgroundPosition = "center";
+  screenElement.style.backgroundRepeat = "no-repeat";
   screenElement.classList.toggle("screen--dirty", state.poop >= 2);
 
   renderPoop();
@@ -567,7 +594,7 @@ function render() {
   if (debugRoot?.open) {
     const nextMoveInMs = Math.max(0, Math.round(movement.nextTargetAtMs - performance.now()));
     document.getElementById("debugLine").textContent =
-      `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter} pos:(${movement.x.toFixed(1)},${movement.y.toFixed(1)}) target:(${movement.targetX.toFixed(1)},${movement.targetY.toFixed(1)}) nextMoveInMs:${nextMoveInMs} speed:${movement.speedPxPerS.toFixed(1)}`;
+      `phase:${state.phase} egg:${state.eggTaps}/10 hunger:${state.hunger} sleep:${state.sleep} poop:${state.poop} bored:${state.bored} life:${state.life} mode:${state.petMode} pose:${state.poseOverride ?? "none"} poseMs:${poseRemainingMs} poseTicks:${state.poseOverrideTicks} ticks:${state.tickCounter} bg:${activeBackground?.id ?? 1}-${activeBackground?.name ?? "unknown"} pos:(${movement.x.toFixed(1)},${movement.y.toFixed(1)}) target:(${movement.targetX.toFixed(1)},${movement.targetY.toFixed(1)}) nextMoveInMs:${nextMoveInMs} speed:${movement.speedPxPerS.toFixed(1)}`;
   }
 
   if (isPetPhase) {
@@ -597,7 +624,7 @@ function applyTick() {
 
   if (state.bgTickCounter >= state.nextBgChangeInTicks) {
     state.bgTickCounter = 0;
-    state.bgIndex = (state.bgIndex + 1) % BG_VARIANTS;
+    state.bgIndex = (state.bgIndex + 1) % BACKGROUNDS.length;
     state.nextBgChangeInTicks = randomBgTickInterval();
   }
 
@@ -655,7 +682,7 @@ function checkTick() {
 }
 
 function cycleBackground(step) {
-  state.bgIndex = (state.bgIndex + step + BG_VARIANTS) % BG_VARIANTS;
+  state.bgIndex = (state.bgIndex + step + BACKGROUNDS.length) % BACKGROUNDS.length;
   state.bgTickCounter = 0;
   state.nextBgChangeInTicks = randomBgTickInterval();
   clampState();

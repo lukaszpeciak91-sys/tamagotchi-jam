@@ -18,3 +18,8 @@ Add these files using **exact** folder paths and filenames:
 - `assets/pets/sloth/Sloth_sheet.png`
 
 GitHub Pages is case-sensitive, so filenames must match exactly.
+
+## Background assets (ordered)
+
+Gameplay backgrounds now use `assets/backgrounds/` with two-digit filenames in strict order: `01.png` through `21.png`.
+`bgIndex` maps directly to this ordered list in `app.js` (`0 => 01.png`, ..., `20 => 21.png`), with Dream Realm set as the final background.
